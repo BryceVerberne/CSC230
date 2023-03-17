@@ -23,8 +23,7 @@
 #    return 0;
 # }
 
-
-# Procedure Main (Do not modify)
+# Procedure Main
 .text
   .globl main
 main:
@@ -98,7 +97,7 @@ Sum:
   jr $ra               # Return to main
   
 
-# Procedure Dif (Do not modify)
+# Procedure Dif
 Dif:
   sub $v0, $a1, $a0
   jr  $ra
