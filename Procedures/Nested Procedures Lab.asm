@@ -72,10 +72,6 @@ Sum:
   
   add $v1, $zero, $v0  # Store the result of Dif call in $v1
   
-  # Restore original values of arguments
-  add $a0, $zero, $s0
-  add $a1, $zero, $s1
-  
   # Concept: 
   #   sub $v0, $a1, $a0 <- z = y-1 - x+1
   addi $a0, $s0, 1     # a = m + 1
