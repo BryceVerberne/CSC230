@@ -1,5 +1,5 @@
 # Title:  Reentrant Subroutines
-# Desc:   Modify the Subroutine.asm program to use nested procedures.
+# Desc:   Convert a C do-while loop to assembly with reentrant subroutines.
 # Author: Bryce Verberne
 # Date:   03/21/2023
 
@@ -38,7 +38,6 @@ main:
   printString result     # Print "You entered "
   printInt $t0           # Print the result
   printNewLine           # Print newline
-  
   
   # Terminate Program (end of main)
   done
