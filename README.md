@@ -29,4 +29,8 @@ Please refer to the MARS MIPS simulator documentation for instructions on how to
 
 These projects are provided for educational purposes only. While the code is free to use, modify, or distribute, please do not use it to directly copy or plagiarize assignments for your coursework. Instead, use the material as a reference to help you understand the concepts and techniques involved in MIPS assembly language programming.
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 **Good luck and happy coding!**
