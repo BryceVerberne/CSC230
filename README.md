@@ -1,10 +1,10 @@
 # CSC 230 - Computer Organization & Assembly Language
 
-Welcome to my CSC230 repository! This repository contains programs written for the CSC 230 Computer Organization and Assembly Language course at Scottsdale Community College, taught by Professor Meacham.
+Welcome to my CSC230 repository! This repository contains projects from my CSC 230 course: Computer Organization and Assembly Language, taken at Scottsdale Community College, taught by Professor Meacham.
 
 ## Course Description
 
-CSC 230, Computer Organization and Assembly Language, is a course that covers the fundamentals of computer organization, assembly language programming, and computer system hardware. It introduces students to the basic principles of computer architecture, assembly language programming, and the interaction between hardware and software components.
+CSC 230 is a course that covers the fundamentals of computer organization, assembly language programming, and computer system hardware. It introduces students to the basic principles of computer architecture, assembly language programming, and the interaction between hardware and software components.
 
 ## Repository Contents
 
