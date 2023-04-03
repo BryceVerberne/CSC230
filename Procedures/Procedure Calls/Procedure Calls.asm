@@ -19,7 +19,7 @@
 #
 #    w = Sum(x, y);
 #    z = Dif(y, x);
-#    return 0;   // Do not implement
+#    return 0;
 # }
 
 .text
@@ -65,13 +65,13 @@ main:
   syscall
   
 
-# Procedure Sum (Do not modify)
+# Procedure Sum
 Sum:
   add $v0, $a0, $a1
   jr  $ra
 
 
-# Procedure Dif (Do not modify)
+# Procedure Dif
 Dif:
   sub $v0, $a0, $a1
   jr  $ra
