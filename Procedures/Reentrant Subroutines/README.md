@@ -19,7 +19,7 @@ The program consists of three main sections:
 ## Usage
 
 1. Ensure you have a compatible MIPS simulator installed on your system (e.g., [MARS MIPS simulator](http://courses.missouristate.edu/KenVollmar/MARS/)).
-2. Load the `Nested Procedures.asm` and 'MyMacors.asm' file into the MIPS assembly simulator.
+2. Load the `Nested Procedures.asm` and `MyMacors.asm` file into the MIPS assembly simulator.
 3. Assemble and run the program.
 4. Follow the prompt to enter a positive number.
 5. The program will output the first positive number inputted. 
