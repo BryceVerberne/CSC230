@@ -1,10 +1,10 @@
 # Saving to Stack
 
-A MIPS assembly language program that demonstrates the concept of saving values to the stack when using procedures.
+This program showcases register value preservation in MIPS assembly using the stack to save `$s0` before calling `increaseReg`, maintaining its original value post-execution.
 
 ## Description
 
-This project illustrates the concept of saving values to the stack when using procedures in MIPS assembly language. It demonstrates how to save and restore the values of stack registers `$s0` to `$s7` when calling a procedure, following the convention that a callee should not modify the values in the `$s#` registers. The program is based on the explanations provided by Amell Peralta in this YouTube video: [MIPS Assembly Saving to Stack](https://www.youtube.com/watch?v=3napwKvocSU&list=PL5b07qlmA3P6zUdDf-o97ddfpvPFuNa5A&index=17&ab_channel=AmellPeralta).
+This project illustrates the concept of saving values to the stack when using procedures in MIPS assembly language. It demonstrates how to save and restore the values of stack registers `$s0` to `$s7` when calling a procedure, following the convention that a callee should not modify the values in the `$s#` registers. The program is based on the explanations provided by Amell Peralta in this YouTube video: [Saving Registers to Stack](https://www.youtube.com/watch?v=3napwKvocSU&list=PL5b07qlmA3P6zUdDf-o97ddfpvPFuNa5A&index=17&ab_channel=AmellPeralta).
 
 ## Program Overview
 
@@ -30,4 +30,4 @@ This is our value in main: 10
 
 ## Acknowledgements
 
-- Special thanks to Amell Peralta for creating the [MIPS Assembly Saving to Stack](https://www.youtube.com/watch?v=3napwKvocSU&list=PL5b07qlmA3P6zUdDf-o97ddfpvPFuNa5A&index=17&ab_channel=AmellPeralta) video that inspired this project.
+- Special thanks to Amell Peralta for creating the [Saving Registers to Stack](https://www.youtube.com/watch?v=3napwKvocSU&list=PL5b07qlmA3P6zUdDf-o97ddfpvPFuNa5A&index=17&ab_channel=AmellPeralta) video that inspired this project.
