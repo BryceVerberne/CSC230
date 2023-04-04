@@ -1,6 +1,6 @@
 # Procedure Basics
 
-This program demonstrates MIPS assembly procedures by calling a displayMessage procedure to print a predefined message and then printing the value 5 in the main program.
+This program demonstrates MIPS assembly procedures by calling a `displayMessage` procedure to print a predefined message and then printing the value 5 in the main program.
 
 ## Description
 
