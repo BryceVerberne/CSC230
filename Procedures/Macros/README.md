@@ -1,10 +1,10 @@
 # Macros
 
-A MIPS assembly language program that demonstrates the concept of creating and using macros in assembly code.
+A MIPS assembly language program that defines a set of macros for common operations.
 
 ## Description
 
-This project showcases the use of macros in MIPS assembly language. Macros are reusable pieces of code that can be used to simplify repetitive tasks or improve code readability. The provided program contains macros for common tasks such as printing strings, reading integers, and printing new lines.
+This project showcases the use of macros in MIPS assembly language. Macros are reusable pieces of code that can be used to simplify repetitive tasks or improve code readability. The provided program contains macros for common tasks such as printing strings or integers, reading integers, and printing newlines without rewriting the same assembly code multiple times. 
 
 ## Program Overview
 
