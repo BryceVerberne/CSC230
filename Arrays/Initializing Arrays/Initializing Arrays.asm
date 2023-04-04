@@ -6,8 +6,8 @@
 
 
 .data
-  array1:   .word 100:5     # Store 3 values that are initialized to 100 into array1
-  array2:   .word 22 5 936  # Store 3 values into array2
+  array1:   .word 100:5       # Store 3 values that are initialized to 100 into array1
+  array2:   .word 22, 5, 936  # Store 3 values into array2
   message1: .asciiz "The following are the values from array1:"
   message2: .asciiz "\n\nThe following are the values from array2:"
 
