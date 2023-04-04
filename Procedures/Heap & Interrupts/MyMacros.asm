@@ -40,6 +40,11 @@
   move $a0, %t  # Move the # of byets to allocate into $a0
   li   $v0, 9
   syscall
-  
   move %v, $v0  # Move the resulting address into %v
+.end_macro
+
+.macro printHex (%t)
+  li   $v0, 34
+  move $a0, %t
+  syscall 
 .end_macro
