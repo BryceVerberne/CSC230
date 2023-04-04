@@ -5,10 +5,10 @@
 
 
 
-# Todo:
-# 1. Ask the user how many random numbers they want. 
-# 2. Generate random numbers into an array. 
-# 3.. Turn our random number generator into its own method to review reentrant subroutines.
+# Program functions:
+#  1. Ask the user how many random numbers they want. 
+#  2. Generate random numbers into an array. 
+#  3. Turn our random number generator into its own method to review reentrant subroutines.
 
 .include "MyMacros.asm"
 
@@ -19,58 +19,63 @@ result: .asciiz "Here's your random numbers: "
 .text
   .globl main
 main:
+
+  jal getRandomNumbers
+  
+  move $a0, $v0          # Move the size of our array in $a0
+  move $a1, $v1          # Move the base address of our array into $a1
+  jal printRandomNumbers
+  
+  
+  # Terminating Program
+  done
+
+
+# getRandomNumbers
+#  - Receives no parameters
+#  - Returns the size of the array in $v0
+#  - Returns the base address of the array in $v1
+getRandomNumbers:
+  
+  # Prolog to save state - Save $ra & any $s# that are used
+  addi $sp, $sp, -20     # Allocate room on the stack (5 words)
+    
+  # Store our values
+  sw $ra, 0($sp)
+  sw $s0, 4($sp)
+  sw $s1, 8($sp)
+  sw $s2, 12($sp)
+  sw $s3, 16($sp)
   
   printString prompt     # Prompt user for integer and read it
   printNewLine
   readInt $t0
   
-  # Todo:
-  # 1. Save my integer value to heap.
-  # 2. Allocate memory in the heap for the array.
-  # 3. Create for loop that populates the array.
+  # Following Implementations:
+  #  1. Save my integer value to heap.
+  #  2. Allocate memory in the heap for the array.
+  #  3. Create for loop that populates the array.
     
-  li $v0, 9              # Syscall to allocate memory
-  move $a0, $t0          # Number of bytes to allocate
-  syscall                # Resulting address will be in $v0
-  move $s0, $v0          # Now, $s0 is a pointer *p to the location in the heap
-  
-  sw $t0, 0($s0)         # Store the size of our array in heap
-  
-  # Now, we want to allocate memroy in the heap for the array
-  li $v0, 9
-  move $a0, $t0
-  syscall
-  
-  move $s1, $v0          # Now $s1 holds the base address of our array
-  
-  # Allocate one more integer for proof of concept
-  li $v0, 9
-  li $a0, 1
-  syscall
-  
-  # Allocate $t bytes of memory & store resulting base address in %v
-  move $s2, $v0          # $s2 is the base
-  sw $t0, 0($s2)         # Store our array size at the end of the array
-  
+  # Allocate memory
   malloc $t0, $s0        # Allocate %t0 bytes & sotre the base in %s0
   sw $t0, 0($s0)         # Store the size of our array in heap
   
-  # Now, we want to allocate memory in heap for the array
-  malloc $t0, $s1
+  malloc $t0, $s1        # Allocate memory in heap for the array
   
   # for loop that populates array
   li $t0, 0              # Use $t0 as our i
   lw $t1, 0($s0)         # Load our size of array into $t1
   move $s3, $s1          # Move the base address of our array in $s3 to do Math
   
-  # Todo:
-  # 1. Test
-  # 2. Logic
-  # 3. Update
   For: 
+    # Parts:
+    #  1. Test
+    #  2. Logic
+    #  3. Update
+    
     # Test
     slt $t3, $t0, $t1    # As long as $t0 < $t1, keep going
-    beq $t0, $zero, end  # Branch if false
+    beq $t3, $zero, end  # Branch if false
     
     # Logic
     # To do a random number, use 42 for a random int.
@@ -89,6 +94,42 @@ main:
     
   end:
   
+  # Epilog - Set up return values & restores state
+  lw   $v0, 0($s0)       # Pass the data written into $v0
+  move $v1, $s1          # Load our base address into $v1
   
-  # Terminating Program
-  done
+  lw $ra, 0($sp)
+  lw $s0, 4($sp)
+  lw $s1, 8($sp)
+  lw $s2, 12($sp)
+  lw $s3, 16($sp)
+  addi $sp, $sp, 20      # Allocate room on the stack (5 words)
+  
+  jr $ra
+  
+  
+# printRandomNumbers
+#  - Passed the number of random numbers in $a0
+#  - Passed the base address of the array in $a1
+#  - Uses a pointer to iterate through the array & print each element
+#  - Also prints the average, min, & max
+#  - Returns nothing
+
+printRandomNumbers:
+  # Parts:
+  #  1. Prolog
+  #  2. Logic
+  #  3. Epilog
+    
+  # Prolog - Always move arguments somewhere safe, since they are easy to be overwritten
+  move $t0, $a0
+  move $t1, $a1
+    
+  # Logic
+  printInt $t0           # Print the number of numbers
+  printNewLine
+  printHex $t1           # Print the base address
+    
+  # Epilog
+  
+  jr $ra
