@@ -5,22 +5,19 @@
 
 
 
-# Program functions:
-#  1. Ask the user how many random numbers they want. 
-#  2. Generate random numbers into an array. 
-#  3. Turn our random number generator into its own method to review reentrant subroutines.
-
 .include "MyMacros.asm"
 
 .data
   prompt: .asciiz "How many numbers do you want?"
-  result: .asciiz "Here are your random numbers: "
-  numMes: .asciiz "\nNumbers: "
+  adr:    .asciiz "\nBase Address: "
+  numNum: .asciiz "\nRandom Numbers: "
+  numMes: .asciiz "\n\nNumbers: "
   comma:  .asciiz ", "
   avgMes: .asciiz "\nAverage: "
-  minMes: .asciiz "\nMin: "
-  maxMes: .asciiz "\nMax: "
-  
+  sum:    .asciiz "\nSum:     "
+  minMes: .asciiz "\nMinimum: "
+  maxMes: .asciiz "\nMaximum: "
+ 
 
 .text
   .globl main
@@ -121,45 +118,110 @@ getRandomNumbers:
 #  - Uses a pointer to iterate through the array & print each element
 #  - Also prints the average, min, & max
 #  - Returns nothing
-
 printRandomNumbers:
-  # Parts:
+
+  # Sections:
   #  1. Prolog
   #  2. Logic
   #  3. Epilog
 
-  # Prolog - Always move arguments somewhere safe, since they are easy to be overwritten
+  # Prolog
+  addi $sp, $sp, -12        # Allocate 12 bytes of space in the stack
+   
+  sw $ra, 0($sp)            # Store '$ra' in stack
+  sw $a0, 4($sp)            # Store '$a0' in stack
+  sw $a1, 8($sp)            # Store '$a1' in stack
+  
+  # Further preventative measures to prevent modifying our $a# registers
   move $t0, $a0
   move $t1, $a1
 
   # Logic
-  printInt $t0           # Print the number of numbers
-  printNewLine
-  printHex $t1           # Print the base address
+  # Print base address & echo back user input
+  printString numNum
+  printInt $t0              # Print the number of numbers
   
+  printString adr
+  printHex $t1              # Print the base address
+  
+  # Print 'numMes' - "Numbers: "
   printString numMes
+
+  # Load our initial min & max values
+  lw $t6, 0($t1)            # Max value ($t6)
+  lw $t7, 0($t1)            # Min value ($t7)
   
   while:
     slt $t3, $t2, $t0       # While $t2 < $t0, continue...
     beq $t3, $zero, endLoop # If $t3 = 0, branch to 'endLoop'
     
+    
+    # Load values
     lw $t4, 0($t1)          # Load the current array value into $t4
     
-    # Print array value
-    printInt $t4
+    # Check next value of '$t2'
+    addi $s1, $t2, 1
     
-    # Print comma
-    printString comma
     
-    # Add 4 to our base address to point to the next array element
-    addi $t1, $t1, 4
+    # Print to console
+    printInt $t4            # Print array value
     
-    # Increment $t2
-    addi $t2, $t2, 1
+    # Print comma to console if '$t4' doesn't contain the last variable
+    blt $s1, $t0, commaOut  # If ($t2 + 1) < $t0, then print a comma
+      b endComma
+    commaOut: printString comma
+    endComma:
+    
+    
+    # Logic
+    add $t5, $t5, $t4       # Add to $t5 (our sum variable)
+    
+    # Evaluate the max value:
+    bgt $t4, $t6, maxEval   # Branch if $t4 > $t6
+      b endMax
+    maxEval: move $t6, $t4  # Replace the max with the current element
+    endMax:
+      
+    # Evaluate the min value:
+    blt $t4, $t7, minEval   # Branch if $t4 < $t6
+      b endMin
+    minEval: move $t7, $t4  # Replace the min with the current element
+    endMin:
+    
+    
+    # Prepare for next iteration
+    addi $t1, $t1, 4        # Add 4 to our base address to point to the next array element
+    addi $t2, $t2, 1        # Increment $t2
     
     b while
   endLoop:
+  
+  
+  # Print sum (additional)
+  printString sum
+  printInt $t5
+  
+  # Calculate average
+  div $t5, $t5, $t0
+  
+  # Print final calculations (average, max, & min)
+  printString avgMes
+  printInt $t5
+  
+  
+  printString minMes
+  printInt $t7
+  
+  printString maxMes
+  printInt $t6
+  
 
   # Epilog
+  lw $ra, 0($sp)           # Restore value of '$ra'
+  lw $a0, 4($sp)           # Restore value of '$a0'
+  lw $a1, 8($sp)           # Restore value of '$a1'
+  
+  addi $sp, $sp, -12       # Restore the stack
 
+  # Jump back to 'main'
   jr $ra
