@@ -85,12 +85,13 @@ getRandomNumbers:
     
     # Logic
     # To do a random number, use 42 for a random int.
+    li $a0, 42
     li $a1, 100             # Set the range to 100
     li $v0, 42
     syscall
     # The random number should be in $v0
     
-    sw $v0, 0($s3)          # Move random number to base
+    sw $a0, 0($s3)          # Move random number to base
     
     # Update
     addi $t0, $t0, 1
@@ -126,29 +127,18 @@ printRandomNumbers:
   #  1. Prolog
   #  2. Logic
   #  3. Epilog
-    
-  # Prolog
-  addi $sp, $sp, -12
-  
-  sw $ra, 0($sp)            # Store $ra in stack
-  sw $a0, 4($sp)            # Store $a0 in stack
-  sw $a1, 8($sp)            # Store $s1 in stack
-  
-  # Store values of arguments in $t0 & $t1, so they are not overwritten
+
+  # Prolog - Always move arguments somewhere safe, since they are easy to be overwritten
   move $t0, $a0
   move $t1, $a1
-  
-  # Clear $t2
-  add $t2, $zero, $zero     # i = 0
-    
+
   # Logic
-  printInt $t0              # Print the number of numbers
+  printInt $t0           # Print the number of numbers
   printNewLine
-  printHex $t1              # Print the base address
-    
-  # Print 'numMes1' - "Numbers: "
+  printHex $t1           # Print the base address
+  
   printString numMes
-    
+  
   while:
     slt $t3, $t2, $t0       # While $t2 < $t0, continue...
     beq $t3, $zero, endLoop # If $t3 = 0, branch to 'endLoop'
@@ -169,8 +159,7 @@ printRandomNumbers:
     
     b while
   endLoop:
-    
-    
+
   # Epilog
-  
+
   jr $ra
