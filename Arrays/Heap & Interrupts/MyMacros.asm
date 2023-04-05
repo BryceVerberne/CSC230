@@ -35,10 +35,10 @@
   syscall
 .end_macro
 
-# Allocate $t bytes of memory & store resulting base address in %v
+# Allocate %t bytes of memory & store resulting base address in %v
 .macro malloc (%t) (%v)
-  move $a0, %t  # Move the # of byets to allocate into $a0
-  li   $v0, 9
+  move $a0, %t  # Move the number of bytes to allocate into $a0
+  li   $v0, 9   # 9 is used to allocate heap memory
   syscall
   move %v, $v0  # Move the resulting address into %v
 .end_macro
