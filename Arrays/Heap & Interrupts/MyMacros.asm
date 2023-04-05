@@ -1,4 +1,4 @@
-# Title:  My Macros
+# Title:  Macros
 # Desc:   This file contains a collection of assembly macros for common tasks.
 # Author: Bryce Verberne
 # Data:   02/21/2023
@@ -24,7 +24,7 @@
 .end_macro
    
 .macro printInt (%t)
-  move $a0, $t0
+  move $a0, %t
   li $v0, 1
   syscall
 .end_macro
