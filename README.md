@@ -31,6 +31,6 @@ These projects are provided for educational purposes only. While the code is fre
 
 ## License
 
-This project is licensed under the CC BY-NC-ND 4.0 License - see the [LICENSE](LICENSE) file for details.
+This repository is licensed under the CC BY-NC-ND 4.0 License - see the [LICENSE](LICENSE) file for details.
 
 **Good luck and happy coding!**
