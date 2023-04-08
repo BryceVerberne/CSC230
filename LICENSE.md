@@ -1,4 +1,4 @@
-# Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License (CC BY-NC-ND 4.0)
+# CC BY-NC-ND 4.0 License
 
 Copyright (c) 2023 Bryce Verberne
 
