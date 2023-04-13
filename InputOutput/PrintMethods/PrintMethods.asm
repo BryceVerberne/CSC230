@@ -1,92 +1,102 @@
-# Complete the following program in Assembly.  Call that program
-# PrintMethods.asm.
-# You CANNOT USE any macro's for this assignment.
-#
-#include <stdio.h>
+# Title:  Print Methods
+# Desc:   This program converts a C program that uses print methods to assembly
+# Author: Bryce Verberne
+# Title:  04/13/2023
 
-# Global Array
-#int myInts[] = {3, -8, -9, 12, 14, -23, 32, 33, 42};
 
-#int main(void) {
-#
-#    printReverse(myInts);
-#    printPositive(myInts);
-#    exit();
-#}
+# C Main Function: 
+ # include <stdio.h>
+
+ # Global Array
+ # int myInts[] = {3, -8, -9, 12, 14, -23, 32, 33, 42};
+
+ # int main(void) {
+ #
+ #    printReverse(myInts);
+ #    printPositive(myInts);
+ #    exit();
+ # }
+
+.data
+
+
 .text
   .globl main
 main:
   
-  # always pass values in $a0 thru $a3
-  la $a0, myInts			# Put the address of our array into $a0
+  # Store the address of myInts into $a0 & call printReverse
+  la $a0, myInts
   jal printReverse
-  la $a0, myInts			# I don't know if printReverse modifies $a0...
+  
+  # Store the address of myInts into $a0 & call printPositive
+  la $a0, myInts
   jal printPositive
   
-  #Exit
+  # Terminate Program
   li $v0, 10
   syscall
   
-# end main
   
-#// Print every other # in reverse
-#void printReverse(int[] myInts) {
+# C printReverse Function:
+#  // Print every other # in reverse
+#  void printReverse(int[] myInts) {
 #    printf("[");
-#    for (int i = 8; i >= 0; i -= 2)
-#    {
-#        printInt(myInts[i]);
-#        //printf("%d",myInts[i]);
-#        //printf(" ");
+#    for (int i = 8; i >= 0; i -= 2) {
+#       printInt(myInts[i]);
+#       printf("%d",myInts[i]);
+#       printf(" ");
 #    }
 #    printf("]\n");
-#}
-# This IS a reentrant subroutine
+# }
+
 .text
 printReverse:
-  # prolog - Save State
+  # Prolog - Save State
   
-  # logic
+  # Logic
   
-  # epilog
+  # Epilog
    
-  # return
+  # Return
   # if I need to return a value, it must be in $v0
   jr $ra
 
-# End printReverse
 
-#// Print positive #'s
-#void printPositive(int[] myInts) {
+# C printPositive Function: 
+#  // Print positive #'s
+#  void printPositive(int[] myInts) {
 #    printf("[");
-#    for (int i = 0; i < 9; i++)
-#    {
+#    for (int i = 0; i < 9; i++) {
 #      if (myInts[i] > 0) {
-#          printInt(myInts[i]);
-#	        //printf("%d",myInts[i]);
-#          //printf(" ");
+#        printInt(myInts[i]);
+#	 printf("%d",myInts[i]);
+#        printf(" ");
 #      }
 #    }
 #    printf("]\n");
-#}
+#  }
 
 .text
 printPositive:
-  # prolog - Save State
+  # Prolog - Save State
   
-  # logic
+  # Logic
   
-  # epilog
+  # Epilog
    
-  # return
-# endPrintPositive
+  # Return
+  jr $ra
 
-#void printInt(int x) {
-#  print(x);
-#  print(' ');
-#}
-# This is NOT a reentrant subroutine.  
+
+# C printInt Function:
+#  void printInt(int x) {
+#    print(x);
+#    print(' ');
+#  }
+ 
 .text
 printInt:
 
 
-# end printInt
+  # Return
+  jr $ra
