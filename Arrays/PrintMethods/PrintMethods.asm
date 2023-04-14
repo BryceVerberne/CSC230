@@ -167,7 +167,7 @@ printPositive:
     
     # Use branching statement to determine if the element in negative
     isPositive:
-      bge $a1, $zero, printVal  # If $a1 < $zero, branch to absVal
+      bgt $a1, $zero, printVal  # If $a1 < $zero, branch to absVal
       b endPositive
     printVal: jal printInt      # Call printInt & pass &a1
     endPositive:
