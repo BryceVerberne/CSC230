@@ -64,3 +64,6 @@ cmake-build-debug
 
 # Ignore CMakeLists.txt files
 CMakeLists.txt
+
+# Ignore exception practice files
+ExceptionPractice
