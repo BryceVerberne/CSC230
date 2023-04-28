@@ -150,50 +150,50 @@ endSwitch:
 
 # Handle 'J': Draw a pixel at the current location and move one to the left
 handleKeyJ:
-  sw $t6, 0($t4)                # Write a pixel
   addi $t4, $t4, -4             # Decrement pointer by 4 bytes (move left)
+  sw $t6, 0($t4)                # Write a pixel
   jr $ra
 
 # Handle 'K': Draw a pixel at the current location and move down one row
 handleKeyK:
-  sw $t6, 0($t4)                # Write a pixel
   addi $t4, $t4, 256            # Increment pointer by 256 bytes (move down)
+  sw $t6, 0($t4)                # Write a pixel
   jr $ra
 
 # Handle 'L': Draw a pixel at the current location and move one to the right
 handleKeyL:
-  sw $t6, 0($t4)                # Write a pixel
   addi $t4, $t4, 4              # Increment pointer by 4 bytes (move right)
+  sw $t6, 0($t4)                # Write a pixel
   jr $ra
 
 # Handle 'I': Draw a pixel at the current location and move up one row
 handleKeyI:
-  sw $t6, 0($t4)                # Write a pixel
   addi $t4, $t4, -256           # Decrement pointer by 256 bytes (move up)
+  sw $t6, 0($t4)                # Write a pixel
   jr $ra
 
 # Handle 'Y': Draw a pixel at the current location and move up and left
 handleKeyY:
-  sw $t6, 0($t4)                # Write a pixel
   addi $t4, $t4, -260           # Update pointer to move up and left
+  sw $t6, 0($t4)                # Write a pixel
   jr $ra
 
 # Handle 'O': Draw a pixel at the current location and move up and right
 handleKeyO:
-  sw $t6, 0($t4)                # Write a pixel
   addi $t4, $t4, -252           # Update pointer to move up and right
+  sw $t6, 0($t4)                # Write a pixel
   jr $ra
 
 # Handle 'N': Draw a pixel at the current location and move down and left
 handleKeyN:
-  sw $t6, 0($t4)                # Write a pixel
   addi $t4, $t4, 252            # Update pointer to move down and left
+  sw $t6, 0($t4)                # Write a pixel
   jr $ra
 
 # Handle 'M': Draw a pixel at the current location and move down and right
 handleKeyM:
-  sw $t6, 0($t4)                # Write a pixel
   addi $t4, $t4, 260            # Update pointer to move down and right
+  sw $t6, 0($t4)                # Write a pixel
   jr $ra
 
 # Handle 'D': Delete the current pixel, but do not move
