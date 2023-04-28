@@ -1,19 +1,11 @@
-# Title:  Snake MMIO
+# Title:  Etch A Sketch
 # Desc:   This program explores MMIO with the incorporation of interrupts
 # Author: Bryce Verberne
 # Title:  04/18/2023
 
 
 
-# Extended Description:
-# This program allows users to create simple pixel art using keyboard inputs. The program responds to different
-# keystrokes to move the current position and draw pixels on the screen. It uses a simple memory-mapped I/O (MMIO)
-# scheme to interact with the display device.
-#
-# The program runs in an infinite loop waiting for key inputs. Once a key is pressed, an interrupt is triggered, and
-# the program jumps to the exception handling code to process the input.
-#
-# The following keys are supported:
+# This program supports the following keys:
 # J - Draw a pixel at the current location and move one to the left
 # K - Draw a pixel at the current location and move down one
 # L - Draw a pixel at the current location and move right
@@ -24,227 +16,193 @@
 # M - Draw a pixel at the current location and move down/right
 # D - Delete the pixel at the current location, but do not move
 # Q - Exit the program
-#
-# The program uses the following MMIO addresses:
-# THD 0xffff000c - Data to write to the display
-# THR 0xffff0008 - Device ready check
-# KC  0xffff0004 - Address to read key input
-# KR  0xffff0000 - Key Write Request (set to enable interrupts)
-#
-# The program also uses a base memory address (BMD) to store the current state:
-# BMD 0x10010000 - Base address for storing program state
-#
-# Note that some parts of the code may need to be changed to use the heap for memory allocation.
 
-.eqv THD 0xffff000c  # this is where we write data to...
-.eqv THR 0xffff0008  # This check is the device ready
-  
-.eqv KC 0xffff0004   # MMMI  Address that we use to read data
-.eqv KR 0xffff0000   # Is it ok to write?  Key Write Request
-  
-.eqv BMD 0x10010000  # This needs to be changed to the heap.
-  
+# R - Changes current color to Red
+# G - Changes current color to Green
+# B - Changes current color to Blue
+
+# Define constants for memory-mapped I/O addresses
+.eqv THD 0xffff000c  # Data to write to the device
+.eqv THR 0xffff0008  # Device ready check
+.eqv KC  0xffff0004  # Address for reading data
+.eqv KR  0xffff0000  # Key Write Request
+.eqv BMD 0x10010000  # Base Memory Address (change to heap if needed)
+
 .text
-  .globl main
+.globl main
 main:
-  li $t1, KR                     # Need this to set the interrupt bit.  Which is bit 2.  
-   
-  # All this does is set us up to handle interrupts.  It sets a bit
-  li $t5, 2		         # 2 is the bit that needs to be set in KR to enable interrupts 0x0010
-  sb $t5, 0($t1)                 # Set bit 2 in KR 
-  # You do need to allocate memory in the heap.
-   
-  loop:
-    add $t8, $t8, $zero          # Do nothing.  Keep MARS happy
-    b loop
+  li $t1, KR          # Load the address for Key Write Request
+  li $t5, 2           # Set bit 2 to enable interrupts (0x0010)
+  sb $t5, 0($t1)      # Set the interrupt enable bit in KR
 
-  .kdata # We save state.
-    color:      .word 0x000000ff #  Start with blue
-    bmdAddress: .word 0x10010020
-     
-  .ktext 0x80000180              # Have to have that address so it can jump here
-  
-    # If we are here, then a key was pressed.  Let's print it.
-    # We got here because an Exception Happened.  Automatically jumped to this code
+loop:
+  add $t8, $t8, $zero # Infinite loop, do nothing
+  b loop
 
-    # Task!!  Please do a prolog here.
-    # Make sure to do a Prolog to save any registers that you modify in the routines below.
-    
-    # Start of our Exception Handling Code - We need some addresses
-    li $t0, KC                   # Make a note, these $t should probably be $s if we are calling other subs
-    lw $s0, 0($t0)               # Get the key pressed
-    move $a0, $s0                # Print it  Good for debug
-    li $v0, 11
-    syscall
-    # Make sure to move $t0 to $a1 here and the key is pressed in $a0
-    jal handleKeyInput           # That is down below.  That is where your methods will go
-                                 # to handle each keystroke
-    
-    # Tasks Epilog
-    # Don't forget the epliog
-    
-    # Return to the infinite loop in main
-    eret
-     
-  # All the subroutines you write to handle key input, need to be in the 
-  # .ktext area.  It is part of Exception Handling.
-  
-  # $a0 holds the key that was just pressed. 
-  handleKeyInput:
-    # Should have a prolog - You need to include one because your logic will be much
-    
-    addi $sp, $sp, -4
-    sw $ra, 0($sp)
-    
-    # more in depth. 
-    # Load state
-    lw $t6, color                # Load our color into $t6
-    lw $t4, bmdAddress           # Load the address from RAM
-       
-      
-    # This is going to be one large switch statement input 
-    # Switch ($a0) {
-    seq $t0, $a0, 'J'            # Case 'J' - Draw a pixel at the current location and move one to the left
-    beq $t0, $zero, checkK       # If it is not 'J', check next ('K')
-    jal handleKeyJ
-    b endSwitch
-      
-    checkK:
-      seq $t0, $a0, 'K'          # Case 'K' - Draw a pixel at the current location and move down one
-      beq $t0, $zero, checkL     # If it is not 'K', check next ('L')
-      jal handleKeyK
-      b endSwitch
-        
-    checkL:
-      seq $t0, $a0, 'L'          # Case 'L' - Draw a pixel at the current location and move up
-      beq $t0, $zero, checkI     # If it is not 'L', check next ('I')
-      jal handleKeyL
-      b endSwitch
-      
-    checkI:
-      seq $t0, $a0, 'I'          # Case 'I' - Draw a pixel at the current location and move up
-      beq $t0, $zero, checkY     # If it is not 'I', check next ('Y')
-      jal handleKeyI
-      b endSwitch
-      
-    checkY:
-      seq $t0, $a0, 'Y'          # Case 'Y' - Draw a pixel at the current location and up/left
-      beq $t0, $zero, checkO     # If it is not 'Y', check next ('O')
-      jal handleKeyY
-      b endSwitch
-      
-    checkO:
-      seq $t0, $a0, 'O'          # Case 'O' - Draw a pixel at the current location and up/right
-      beq $t0, $zero, checkN     # If it is not 'O', check next ('N')
-      jal handleKeyO
-      b endSwitch
-      
-    checkN:
-      seq $t0, $a0, 'N'          # Case 'N' - Draw a pixel at the current location and down/left
-      beq $t0, $zero, checkM     # If it is not 'N', check next ('M')
-      jal handleKeyN
-      b endSwitch
-      
-    checkM:
-      seq $t0, $a0, 'M'          # Case 'M' - Draw a pixel at the current location and down/right
-      beq $t0, $zero, checkD     # If it is not 'M', check next ('D')
-      jal handleKeyN
-      b endSwitch
-      
-    checkD:
-      seq $t0, $a0, 'D'          # Case 'D' - Deletes the current location, but does not move.
-      beq $t0, $zero, checkQ     # If it is not 'D', check next ('Q')
-      jal handleKeyD
-      b endSwitch
-      
-    checkQ:
-      seq $t0, $a0, 'Q'          # Case 'Q' - Exits the program
-      beq $t0, $zero, endSwitch  # If it is not 'Q', branch to endSwitch
-      jal handleKeyQ
-      b endSwitch
-        
-    endSwitch:                   # End the switch statement
-     
-     # Save new state
-     sw $t6, color               # Save our color back.
-     sw $t4, bmdAddress          # Save our address back.
-     
-     lw $ra, 0($sp)
-     addi $sp, $sp, 4
-     
-     # Should have an epilog
-     jr $ra     
-    
-    
-# ============
+.kdata
+  color:      .word 0x000000ff  # Starting color (blue)
+  bmdAddress: .word 0x10010020  # Base Memory Address (BMD) for storing state
+  baseColor:  .word 0x00000000  # Background color (black)
+
+.ktext 0x80000180
+  # Load the baseColor into $t9
+  lw $t9, baseColor
+
+  # Exception handling code starts here
+  # Save any registers that you modify in the following routines
+
+  # Load the key pressed and print it (useful for debugging)
+  li $t0, KC
+  lw $s0, 0($t0)
+  move $a0, $s0
+  li $v0, 11
+  syscall
+
+  # Call handleKeyInput to handle each keystroke
+  jal handleKeyInput
+
+  # Restore saved registers and return to the main loop
+  eret
+
+handleKeyInput:
+  # Prolog: Save $ra
+  addi $sp, $sp, -4
+  sw $ra, 0($sp)
+
+  # Load state
+  lw $t6, color
+  lw $t4, bmdAddress
+
+  # Switch statement based on the key pressed ($a0)
+  # Replace the 'J', 'K', etc. with the desired keys for each case
+  seq $t0, $a0, 'J'
+  beq $t0, $zero, checkK
+  jal handleKeyJ
+  b endSwitch
+
+checkK:
+  seq $t0, $a0, 'K'
+  beq $t0, $zero, checkL
+  jal handleKeyK
+  b endSwitch
+
+checkL:
+  seq $t0, $a0, 'L'
+  beq $t0, $zero, checkI
+  jal handleKeyL
+  b endSwitch
+
+checkI:
+  seq $t0, $a0, 'I'
+  beq $t0, $zero, checkY
+  jal handleKeyI
+  b endSwitch
+
+checkY:
+  seq $t0, $a0, 'Y'
+  beq $t0, $zero, checkO
+  jal handleKeyY
+  b endSwitch
+
+checkO:
+  seq $t0, $a0, 'O'
+  beq $t0, $zero, checkN
+  jal handleKeyO
+  b endSwitch
+
+checkN:
+  seq $t0, $a0, 'N'
+  beq $t0, $zero, checkM
+  jal handleKeyN
+  b endSwitch
+
+checkM:
+  seq $t0, $a0, 'M'
+  beq $t0, $zero, checkD
+  jal handleKeyM
+  b endSwitch
+
+checkD:
+  seq $t0, $a0, 'D'
+  beq $t0, $zero, checkQ
+  jal handleKeyD
+  b endSwitch
+
+checkQ:
+  seq $t0, $a0, 'Q'
+  beq $t0, $zero, endSwitch
+  jal handleKeyQ
+  b endSwitch
+
+endSwitch:
+  # Save the new state
+  sw $t6, color
+  sw $t4, bmdAddress
+
+  # Epilog: Restore $ra and return
+  lw $ra, 0($sp)
+  addi $sp, $sp, 4
+  jr $ra
+
+   
 # Key Handling
 # ============
 
-# J says to draw a pixel at the current location and move one to the left
+# Handle 'J': Draw a pixel at the current location and move one to the left
 handleKeyJ:
   sw $t6, 0($t4)                # Write a pixel
-  addi $t4, $t4, -4             # Update our pointer
-  
+  addi $t4, $t4, -4             # Decrement pointer by 4 bytes (move left)
   jr $ra
-  
-  
-# K says to draw a pixel at the current location and move down one
+
+# Handle 'K': Draw a pixel at the current location and move down one row
 handleKeyK:
   sw $t6, 0($t4)                # Write a pixel
-  addi $t4, $t4, 256            # Update our pointer
-  
+  addi $t4, $t4, 256            # Increment pointer by 256 bytes (move down)
   jr $ra
 
-
-# L says to draw a pixel at the current location and move right
+# Handle 'L': Draw a pixel at the current location and move one to the right
 handleKeyL:
   sw $t6, 0($t4)                # Write a pixel
-  addi $t4, $t4, 4              # Update our pointer
-  
+  addi $t4, $t4, 4              # Increment pointer by 4 bytes (move right)
   jr $ra
-  
-  
-# I says to draw a pixel at the current location and move up
+
+# Handle 'I': Draw a pixel at the current location and move up one row
 handleKeyI:
-  sw $t6, 0($t4)               # Write a pixel
-  addi $t4, $t4, -256          # Update our pointer
-  
+  sw $t6, 0($t4)                # Write a pixel
+  addi $t4, $t4, -256           # Decrement pointer by 256 bytes (move up)
   jr $ra
-  
-  
-# Y moves to draw a pixel at the current location and up/left
-handleKeyY: 
 
-  jr $ra  
-  
+# Handle 'Y': Draw a pixel at the current location and move up and left
+handleKeyY:
+  sw $t6, 0($t4)                # Write a pixel
+  addi $t4, $t4, -260           # Update pointer to move up and left
+  jr $ra
 
-# O moves to draw a pixel at the current location and up/right
+# Handle 'O': Draw a pixel at the current location and move up and right
 handleKeyO:
-
+  sw $t6, 0($t4)                # Write a pixel
+  addi $t4, $t4, -252           # Update pointer to move up and right
   jr $ra
-  
 
-# N moves to draw a pixel at the current location and down/left
+# Handle 'N': Draw a pixel at the current location and move down and left
 handleKeyN:
-
+  sw $t6, 0($t4)                # Write a pixel
+  addi $t4, $t4, 252            # Update pointer to move down and left
   jr $ra
-  
-  
-# M moves to draw a pixel at the current location and down/right
+
+# Handle 'M': Draw a pixel at the current location and move down and right
 handleKeyM:
-
+  sw $t6, 0($t4)                # Write a pixel
+  addi $t4, $t4, 260            # Update pointer to move down and right
   jr $ra
-  
-  
-# D deletes the current location, but does not move.
+
+# Handle 'D': Delete the current pixel, but do not move
 handleKeyD:
-
-  jr $ra  
-  
-  
-# Q exits the program
-handleKeyQ:
-  li $v0, 10
-  syscall
-
+  sw $t9, 0($t4)                # Write a background-colored pixel (delete)
   jr $ra
+
+# Handle 'Q': Exit the program
+handleKeyQ:
+  li $v0, 10                    # Set syscall code for exit
+  syscall                       # Perform the syscall
+  jr $ra                        # Return to caller
