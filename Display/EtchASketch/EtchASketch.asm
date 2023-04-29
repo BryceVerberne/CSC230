@@ -40,13 +40,18 @@ loop:
   b loop
 
 .kdata
-  color:      .word 0x000000ff  # Starting color (blue)
+  blue:       .word 0x000000ff  # Starting color (blue)
+  red:        .word 0x00ff0000  # Color red
+  green:      .word 0x0000ff00  # Color green
   bmdAddress: .word 0x10010020  # Base Memory Address (BMD) for storing state
   baseColor:  .word 0x00000000  # Background color (black)
 
 .ktext 0x80000180
   # Load the baseColor into $t9
   lw $t9, baseColor
+  
+  # Get the starting color
+  jal setColorBlue
 
   # Exception handling code starts here
   # Save any registers that you modify in the following routines
@@ -64,13 +69,13 @@ loop:
   # Restore saved registers and return to the main loop
   eret
 
+
 handleKeyInput:
   # Prolog: Save $ra
   addi $sp, $sp, -4
   sw $ra, 0($sp)
 
   # Load state
-  lw $t6, color
   lw $t4, bmdAddress
 
   # Switch statement based on the key pressed ($a0)
@@ -130,13 +135,31 @@ checkD:
 
 checkQ:
   seq $t0, $a0, 'Q'
-  beq $t0, $zero, endSwitch
+  beq $t0, $zero, checkR
   jal handleKeyQ
+  b endSwitch
+  
+checkR:
+  seq $t0, $a0, 'R'
+  beq $t0, $zero, checkB
+  jal setColorRed
+  b endSwitch
+  
+checkB:
+  seq $t0, $a0, 'B'
+  beq $t0, $zero, checkG
+  jal setColorBlue
+  b endSwitch
+  
+checkG:
+  seq $t0, $a0, 'G'
+  beq $t0, $zero, endSwitch
+  jal setColorGreen
   b endSwitch
 
 endSwitch:
   # Save the new state
-  sw $t6, color
+  jal setColorBlue
   sw $t4, bmdAddress
 
   # Epilog: Restore $ra and return
@@ -206,3 +229,19 @@ handleKeyQ:
   li $v0, 10                    # Set syscall code for exit
   syscall                       # Perform the syscall
   jr $ra                        # Return to caller
+
+
+# Pixel Colors
+# ============
+
+setColorRed:
+  lw $t6, red
+  jr $ra
+  
+setColorBlue:
+  lw $t6, blue
+  jr $ra
+  
+setColorGreen:
+  lw $t6, green
+  jr $ra
