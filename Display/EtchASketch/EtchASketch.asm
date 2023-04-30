@@ -28,46 +28,49 @@
 .eqv KR  0xffff0000  # Key Write Request
 .eqv BMD 0x10010000  # Base Memory Address (change to heap if needed)
 
+.kdata
+  currentColor: .word 0x000000000
+  blue:         .word 0x000000ff  # Starting color (blue)
+  red:          .word 0x00ff0000  # Color red
+  green:        .word 0x0000ff00  # Color green
+  bmdAddress:   .word 0x10010020  # Base Memory Address (BMD) for storing state
+  baseColor:    .word 0x00000000  # Background color (black)
+
 .text
 .globl main
 main:
   li $t1, KR          # Load the address for Key Write Request
   li $t5, 2           # Set bit 2 to enable interrupts (0x0010)
   sb $t5, 0($t1)      # Set the interrupt enable bit in KR
+  
+  # Get the starting color
+  lw $t6, blue
+  sw $t6, currentColor
+  
+  # Load the baseColor into $t9
+  lw $t9, baseColor
 
 loop:
   b loop
 
-.kdata
-  blue:       .word 0x000000ff  # Starting color (blue)
-  red:        .word 0x00ff0000  # Color red
-  green:      .word 0x0000ff00  # Color green
-  bmdAddress: .word 0x10010020  # Base Memory Address (BMD) for storing state
-  baseColor:  .word 0x00000000  # Background color (black)
-
-.ktext 0x80000180
-  # Load the baseColor into $t9
-  lw $t9, baseColor
+  .ktext 0x80000180
   
-  # Get the starting color
-  jal setColorBlue
+    # Exception handling code starts here
+    # Save any registers that you modify in the following routines
 
-  # Exception handling code starts here
-  # Save any registers that you modify in the following routines
-
-  # Load the key pressed and print it (useful for debugging)
-  li $t0, KC
-  lw $s0, 0($t0)
+    # Load the key pressed and print it (useful for debugging)
+    li $t0, KC
+    lw $s0, 0($t0)
   
-  move $a0, $s0
-  li $v0, 11
-  syscall
+    move $a0, $s0
+    li $v0, 11
+    syscall
 
-  # Call handleKeyInput to handle each keystroke
-  jal handleKeyInput
+    # Call handleKeyInput to handle each keystroke
+    jal handleKeyInput
 
-  # Restore saved registers and return to the main loop
-  eret
+    # Restore saved registers and return to the main loop
+    eret
 
 
 handleKeyInput:
@@ -159,7 +162,7 @@ checkG:
 
 endSwitch:
   # Save the new state
-  sw $t6, blue
+  sw $t6, currentColor
   sw $t4, bmdAddress
 
   # Epilog: Restore $ra and return
@@ -243,5 +246,5 @@ setColorBlue:
   jr $ra
   
 setColorGreen:
-  lw $t6, green
+  lw $t6, green 
   jr $ra
