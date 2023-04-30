@@ -51,8 +51,6 @@ loop:
   
   # Get the starting color
   jal setColorBlue
-  
-  jal drawCenterPixel
 
   # Exception handling code starts here
   # Save any registers that you modify in the following routines
@@ -246,37 +244,4 @@ setColorBlue:
   
 setColorGreen:
   lw $t6, green
-  jr $ra
-  
-  
-drawCenterPixel:
-  # Prolog: Save $ra and used registers
-  addi $sp, $sp, -16
-  sw $ra, 0($sp)
-  sw $t0, 4($sp)
-  sw $t1, 8($sp)
-  sw $t2, 12($sp)
-
-  # Calculate the center coordinates of the display: (256, 256)
-  li $t0, 256    # row
-  li $t1, 256    # column
-
-  # Calculate the memory address for the center pixel
-  li $t2, 512
-  mul $t0, $t0, $t2         # row * display_width_in_pixels
-  add $t0, $t0, $t1         # row * display_width_in_pixels + column
-  li $t2, 4
-  mul $t0, $t0, $t2         # (row * display_width_in_pixels + column) * bytes_per_pixel
-  li $t1, 0x10010000
-  add $t0, $t0, $t1         # base_address + (row * display_width_in_pixels + column) * bytes_per_pixel
-
-  # Store the color value at the calculated address
-  sw $t6, 0($t0)
-
-  # Epilog: Restore $ra and used registers, and return
-  lw $t2, 12($sp)
-  lw $t1, 8($sp)
-  lw $t0, 4($sp)
-  lw $ra, 0($sp)
-  addi $sp, $sp, 16
   jr $ra
