@@ -34,6 +34,7 @@
   red:          .word 0x00FF0000  # Color red
   green:        .word 0x0000ff00  # Color green
   olive:        .word 0xFF6B8E23  # Color olive
+  white:        .word 0xFFFFFFFF  # Color white
   black:        .word 0x00000000  # Background color (black)
   bmdAddress:   .word 0x10010000  # Base Memory Address (BMD) for storing state
 
@@ -50,28 +51,29 @@ main:
   lw $t1, blue
   sw $t1, currentColor
 
-  # Load the background color into $s0
+  # Load permanent color values into save registers
   lw $s0, black
-  
-  lw $s2, olive
+  lw $s1, olive
+  lw $s2, white
 
   # Load the Base Memory Address (BMD) into $t2
   lw $t2, bmdAddress
 
-  # Load the border color and call createBorder to draw a border around the bitmap display
-
+  # Call createBorder to draw a border around the bitmap display
   jal createBorder
+  
+  # Call markCenter to mark the center of the bitmap display with a white pixel
+  jal markCenter
 
 loop:  # Infinite loop to keep the program running
   b loop
 
 
 # Title: createBorder
-# Desc:  This subroutine draws a olive-colored border around our bitmap
+# Desc:  This subroutine draws a olive-colored border around the bitmap
 createBorder:
-  addi $sp, $sp, -8  # Reserve space on the stack for return address and $t2
-  sw $ra, 0($sp)     # Store return address on the stack
-  sw $t2, 4($sp)     # Store $t2 on the stack
+  addi $sp, $sp, -4  # Reserve space on the stack for return address and $t2
+  sw $t2, 0($sp)     # Store $t2 on the stack
   
   li $t0, 0          # Initialize $t0 to zero
   
@@ -80,7 +82,7 @@ createBorder:
     beq $t0, 63, endTop      # If we have drawn 64 pixels, exit the loop
     
     addi $t2, $t2, 4         # Move the buffer pointer one pixel to the right
-    sw $s2, 0($t2)           # Write the border color pixel to the buffer
+    sw $s1, 0($t2)           # Write the border color pixel to the buffer
     
     addi $t0, $t0, 1         # Increment pixel counter
     
@@ -94,7 +96,7 @@ createBorder:
     beq $t0, 63, endRight    # If we have drawn 64 pixels, exit the loop
     
     addi $t2, $t2, 256       # Move the buffer pointer one pixel down
-    sw $s2, 0($t2)           # Write the border color pixel to the buffer
+    sw $s1, 0($t2)           # Write the border color pixel to the buffer
     
     addi $t0, $t0, 1         # Increment pixel counter
     
@@ -108,7 +110,7 @@ createBorder:
     beq $t0, 63, endBottom   # If we have drawn 64 pixels, exit the loop
     
     addi $t2, $t2, -4        # Move the buffer pointer one pixel to the left
-    sw $s2, 0($t2)           # Write the border color pixel to the buffer
+    sw $s1, 0($t2)           # Write the border color pixel to the buffer
     
     addi $t0, $t0, 1         # Increment pixel counter
     
@@ -122,17 +124,33 @@ createBorder:
     beq $t0, 63, endLeft     # If we have drawn 64 pixels, exit the loop
     
     addi $t2, $t2, -256      # Move the buffer pointer one pixel up
-    sw $s2, 0($t2)           # Write the border color pixel to the buffer
+    sw $s1, 0($t2)           # Write the border color pixel to the buffer
     
     addi $t0, $t0, 1         # Increment pixel counter
     
     b leftBorder             # Branch back to leftBorder to draw the next pixel
   endLeft:
   
-  lw $ra, 0($sp)    # Restore return address from the stack
-  lw $t2, 4($sp)    # Restore $t2 from the stack
-  addi $sp, $sp, 8  # Release stack
+  lw $t2, 0($sp)    # Restore $t2 from the stack
+  addi $sp, $sp, 4  # Release stack
   
+  jr $ra
+  
+  
+# Title: markCenter
+# Desc:  This subroutine marks the center pixel of a bitmap display.
+markCenter:
+
+  addi $sp, $sp, -4  # Reserve space on the stack for the return address and $t2
+  sw $t2, 0($sp)     # Store the current value of $t2 on the stack to preserve its value
+
+  # The base address of the bitmap display in MARS is 0x10008000 (4096*8 + 0x8000).
+  addi $t2, $t2, 8320  # Calculate the center pixel address: 0x10008000 + 2080 = 0x10008920
+  sw $s2, 0($t2)       # Store the value of $s2 at the calculated center pixel address
+
+  lw $t2, 0($sp)    # Restore the original value of $t2 from the stack
+  addi $sp, $sp, 4  # Release the space reserved on the stack
+
   jr $ra
 
   
@@ -143,9 +161,9 @@ createBorder:
 
   # Load the key pressed and print it (useful for debugging)
   li $t0, KC
-  lw $s1, 0($t0)
+  lw $s3, 0($t0)
   
-  move $a0, $s1
+  move $a0, $s3
   li $v0, 11
   syscall
 
