@@ -59,10 +59,10 @@ main:
   # Load the Base Memory Address (BMD) into $t2
   lw $t2, bmdAddress
 
-  # Call createBorder to draw a border around the bitmap display
+  # Draw a border around the bitmap display
   jal createBorder
   
-  # Call markCenter to mark the center of the bitmap display with a white pixel
+  # Mark the center of the bitmap display and move the base address to this position
   jal markCenter
 
 loop:  # Infinite loop to keep the program running
@@ -141,15 +141,9 @@ createBorder:
 # Desc:  This subroutine marks the center pixel of a bitmap display.
 markCenter:
 
-  addi $sp, $sp, -4  # Reserve space on the stack for the return address and $t2
-  sw $t2, 0($sp)     # Store the current value of $t2 on the stack to preserve its value
-
   # The base address of the bitmap display in MARS is 0x10008000 (4096*8 + 0x8000).
   addi $t2, $t2, 8320  # Calculate the center pixel address: 0x10008000 + 2080 = 0x10008920
   sw $s2, 0($t2)       # Store the value of $s2 at the calculated center pixel address
-
-  lw $t2, 0($sp)    # Restore the original value of $t2 from the stack
-  addi $sp, $sp, 4  # Release the space reserved on the stack
 
   jr $ra
 
