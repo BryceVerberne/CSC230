@@ -1,7 +1,7 @@
 # Title:  Etch A Sketch
 # Desc:   This program emulates an Etch A Sketch, allowing you to draw with the bitmap display.
 # Author: Bryce Verberne
-# Title:  04/18/2023
+# Title:  05/06/2023
 
 
 
@@ -31,7 +31,7 @@
  # current location. Additionally, the program has the following features:
  #   1. When a color is selected, pressing the same color key repeatedly will
  #      increase the gradient by 30 up to 8 times, allowing for a variety of
- #      shades.
+ #      shades (Tip: Blue is very dark when initially changing its gradient). 
  #   2. Holding shift while pressing any of the movement keys (j, k, l, i, y, o,
  #      n, m) will cause the program to draw pixels in the specified direction
  #      until it reaches the border.
@@ -43,25 +43,23 @@
 .eqv BMD 0x10040000  # Base Memory Address (heap)
 
 .kdata
-  currentColor: .word 0x000000000 # Current color of the pixel
-  blue:         .word 0x000000FF  # Starting color (blue)
-  red:          .word 0x00FF0000  # Color red
-  green:        .word 0x0000ff00  # Color green
-  olive:        .word 0xFF6B8E23  # Color olive
-  white:        .word 0xFFFFFFFF  # Color white
-  black:        .word 0x00000000  # Background color (black)
-  bmdAddress:   .word 0x10040000  # Base Memory Address (BMD) for storing state
+  currentColor: .word 0x000000000  # Current color of the pixel
+  blue:         .word 0x000000FF   # Starting color (blue)
+  red:          .word 0x00FF0000   # Color red
+  green:        .word 0x0000ff00   # Color green
+  olive:        .word 0xFF6B8E23   # Color olive
+  white:        .word 0xFFFFFFFF   # Color white
+  black:        .word 0x00000000   # Background color (black)
+  bmdAddress:   .word 0x10040000   # Base Memory Address (BMD) for storing state
   
-  colorOffset:  .word 0           # Gradient counter for color changes
-  upInput:      .word 0           # Y-coordinate input from the keyboard for up movement
-  downInput:    .word 0           # Y-coordinate input from the keyboard for down movement
-  rightInput:   .word 0           # X-coordinate input from the keyboard for right movement
-  leftInput:    .word 0           # X-coordinate input from the keyboard for left movement
+  colorOffset:  .word 0            # Gradient counter for color changes
+  upInput:      .word 0            # Tracks up movement
+  downInput:    .word 0            # Tracks down movement
+  rightInput:   .word 0            # Tracks right movement
+  leftInput:    .word 0            # Tracks left movement
 
 .text
-.globl main
-
-# main function
+  .globl main
 main:
   li $t9, KR      # Load the address for Key Write Request
   li $t8, 2       # Set bit 2 to enable interrupts (0x0010)
@@ -71,7 +69,7 @@ main:
   lw $s0, blue
   sw $s0, currentColor
   
-  # Load the Base Memory Address (BMD) into $s1 for framebuffer operations
+  # Load the Base Memory Address (BMD) into $s1
   lw $s1, bmdAddress
 
   # Load permanent color values into save registers for later use
@@ -92,8 +90,6 @@ loop:  # Infinite loop to keep the program running
 createBorder:
   addi $sp, $sp, -4  # Reserve space on the stack for return address and $s1
   sw $s1, 0($sp)     # Store $s1 on the stack
-  
-  li $t0, 0          # Initialize $t0 to zero
   
   # Draw top border
   topBorder:
@@ -158,7 +154,6 @@ createBorder:
 # This subroutine marks the center pixel of a bitmap display.
 markCenter:
 
-  # The base address of the bitmap display in MARS is 0x10008000 (4096*8 + 0x8000).
   addi $s1, $s1, 8320  # Calculate the center pixel address: 0x10008000 + 2080 = 0x10008920
   sw $s2, 0($s1)       # Store the value of $s2 at the calculated center pixel address
 
@@ -332,7 +327,7 @@ endSwitch:
 # ============
 # Desc: These subroutines handle key presses and write pixels to a bitmap display.
 
-# Handle 'J': Draw a pixel at the current location and move one to the left
+# Handle 'J': Move one to the left and draw a pixel at that location.
 handleKeyJ: 
   # Load the values of leftInput and rightInput
   lw $t0, leftInput
@@ -355,7 +350,7 @@ handleKeyJ:
   jr $ra
 
 
-# Handle 'K': Draw a pixel at the current location and move down one row
+# Handle 'K': Move down one row and draw a pixel at that location.
 handleKeyK:
   # Load the values of upInput and downInput
   lw $t0, upInput
@@ -378,7 +373,7 @@ handleKeyK:
   jr $ra
 
 
-# Handle 'L': Draw a pixel at the current location and move one to the right
+# Handle 'L': Move one to the right and draw a pixel at that location.
 handleKeyL:
   # Load the values of leftInput and rightInput
   lw $t0, leftInput
@@ -401,7 +396,7 @@ handleKeyL:
   jr $ra
 
 
-# Handle 'I': Draw a pixel at the current location and move up one row
+# Handle 'I': Move up one row and draw a pixel at that location.
 handleKeyI:
   # Load the values of upInput and downInput
   lw $t0, upInput
@@ -424,7 +419,7 @@ handleKeyI:
   jr $ra
 
 
-# Handle 'Y': Draw a pixel at the current location, then move up and left
+# Handle 'Y': Move up and left, then draw a pixel at that location.
 handleKeyY:  
   # Load the values of leftInput, rightInput, upInput, and downInput
   lw $t0, leftInput
@@ -455,7 +450,7 @@ handleKeyY:
   jr $ra
 
 
-# Handle 'O': Draw a pixel at the current location, then move up and right
+# Handle 'O': Move up and right, then draw a pixel at that location.
 handleKeyO:
   # Load the values of leftInput, rightInput, upInput, and downInput
   lw $t0, leftInput
@@ -486,7 +481,7 @@ skipUpRight:
   jr $ra
 
 
-# Handle 'N': Draw a pixel at the current location and move down and left
+# Handle 'N': Move down and left, then draw a pixel at that location
 handleKeyN:
   # Load the values of leftInput, rightInput, upInput, and downInput
   lw $t0, leftInput
@@ -517,7 +512,7 @@ handleKeyN:
   jr $ra
 
 
-# Handle 'M': Draw a pixel at the current location and move down and right
+# Handle 'M': Move down and right, then draw a pixel at that location
 handleKeyM:
   # Load the values of leftInput, rightInput, upInput, and downInput
   lw $t0, leftInput
@@ -820,7 +815,7 @@ setColorRed:
     addi $t1, $t1, 30          # Increment the red gradient counter
     addi $s0, $s0, 30          # Add 30 to the red component of the current color
 
-    b exitRed                  # Jump to exitRed
+    b exitRed
   setRed:
     lw $s0, red                # Load the base red color value into $s0
     li $t1, 0                  # Initialize red gradient counter to 0
@@ -846,7 +841,7 @@ setColorBlue:
     addi $t1, $t1, 30          # Increment the blue gradient counter
     addi $s0, $s0, 30          # Add 30 to the blue component of the current color
 
-    b exitBlue                 # Jump to exitBlue
+    b exitBlue
   setBlue:
     lw $s0, blue               # Load the base blue color value into $s0
     li $t1, 0                  # Initialize blue gradient counter to 0
@@ -872,7 +867,7 @@ setColorGreen:
     addi $t1, $t1, 30          # Increment the green gradient counter
     addi $s0, $s0, 30          # Add 30 to the green component of the current color
 
-    b exitGreen                # Jump to exitGreen
+    b exitGreen
   setGreen:
     lw $s0, green              # Load the base green color value into $s0
     li $t1, 0                  # Initialize green gradient counter to 0
