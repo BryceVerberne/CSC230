@@ -5,36 +5,42 @@
 
 
 
- # Program Breif:
- # This MIPS assembly program emulates an Etch A Sketch toy.
- # The program initializes a 512x512 bitmap display with a unit height and width
- # of 8 pixels. Memory is allocated in the heap to store the display. 
- # 
- # The program allows the user to draw on the display using the following keys:
- #   j - Draw a pixel at the current location and move one to the left
- #   k - Draw a pixel at the current location and move down one
- #   l - Draw a pixel at the current location and move right
- #   i - Draw a pixel at the current location and move up
- #   y - Draw a pixel at the current location and move up/left
- #   o - Draw a pixel at the current location and move up/right
- #   n - Draw a pixel at the current location and move down/left
- #   m - Draw a pixel at the current location and move down/right
- #   d - Delete the pixel at the current location, but do not move
- #   q - Exit the program
- #
- # Color selection:
- #   r - Changes current color to Red
- #   g - Changes current color to Green
- #   b - Changes current color to Blue
- #
- # The cursor is prevented from moving off the screen by keeping it at its
- # current location. Additionally, the program has the following features:
- #   1. When a color is selected, pressing the same color key repeatedly will
- #      increase the gradient by 30 up to 8 times, allowing for a variety of
- #      shades (Tip: Blue is very dark when initially changing its gradient). 
- #   2. Holding shift while pressing any of the movement keys (j, k, l, i, y, o,
- #      n, m) will cause the program to draw pixels in the specified direction
- #      until it reaches the border.
+# === Overview ===
+# This MIPS assembly program emulates an Etch A Sketch toy, allowing users to
+# draw on the bitmap display with various colors and shades.
+#
+# === Bitmap Display Settings ===
+# - Unit Width in Pixels:     8
+# - Unit Height in Pixels:    8
+# - Display Width in Pixels:  512
+# - Display Height in Pixels: 512
+# - Base address for display: 0x10040000 (heap)
+#
+# === Controls ===
+# Movement & Drawing:
+#   j - Move left and draw
+#   k - Move down and draw
+#   l - Move right and draw
+#   i - Move up and draw
+#   y - Move up/left and draw
+#   o - Move up/right and draw
+#   n - Move down/left and draw
+#   m - Move down/right and draw
+#   d - Delete pixel at current location
+#   q - Quit the program
+#
+# Color Selection:
+#   r - Red
+#   g - Green
+#   b - Blue
+#
+# === Additional Features ===
+# 1. Pressing the same color key repeatedly increases the gradient by 30 up to
+#    8 times, allowing for a variety of shades (Note: Blue is very dark when 
+#    initially changing its gradient).
+# 2. Holding shift while pressing any movement key (j, k, l, i, y, o, n, m)
+#    draws pixels continuously in the specified direction until reaching the border.
+
 
 .eqv THD 0xFFFF000C  # Data to write to the device
 .eqv THR 0xFFFF0008  # Device ready check
@@ -85,6 +91,10 @@ loop:  # Infinite loop to keep the program running
   b loop
 
 
+
+# === Bitmap Display Setup Subroutines ===
+# Desc: The following subroutines set up the initial state of the bitmap display by
+#       creating a border around the drawing area and marking the center pixel.
 
 # This subroutine draws a olive-colored border around the bitmap
 createBorder:
@@ -175,10 +185,11 @@ markCenter:
 
   # Restore saved registers and return to the main loop
   eret
-
-
-
-# This subroutine handles user input and performs different actions based on the key pressed. 
+  
+  
+  
+# === Handle Key Input ===
+# Desc: This subroutine handles user input and performs different actions based on the key pressed. 
 handleKeyInput:
   # Prolog: Save $ra
   addi $sp, $sp, -4
@@ -320,11 +331,10 @@ endSwitch:
   lw $ra, 0($sp)
   addi $sp, $sp, 4
   jr $ra
-
   
     
-# Key Handling
-# ============
+    
+# === Key Handling ===
 # Desc: These subroutines handle key presses and write pixels to a bitmap display.
 
 # Handle 'J': Move one to the left and draw a pixel at that location.
@@ -350,7 +360,7 @@ handleKeyJ:
   jr $ra
 
 
-# Handle 'K': Move down one row and draw a pixel at that location.
+# Handle 'k': Move down one row and draw a pixel at that location.
 handleKeyK:
   # Load the values of upInput and downInput
   lw $t0, upInput
@@ -373,7 +383,7 @@ handleKeyK:
   jr $ra
 
 
-# Handle 'L': Move one to the right and draw a pixel at that location.
+# Handle 'l': Move one to the right and draw a pixel at that location.
 handleKeyL:
   # Load the values of leftInput and rightInput
   lw $t0, leftInput
@@ -396,7 +406,7 @@ handleKeyL:
   jr $ra
 
 
-# Handle 'I': Move up one row and draw a pixel at that location.
+# Handle 'i': Move up one row and draw a pixel at that location.
 handleKeyI:
   # Load the values of upInput and downInput
   lw $t0, upInput
@@ -419,7 +429,7 @@ handleKeyI:
   jr $ra
 
 
-# Handle 'Y': Move up and left, then draw a pixel at that location.
+# Handle 'y': Move up and left, then draw a pixel at that location.
 handleKeyY:  
   # Load the values of leftInput, rightInput, upInput, and downInput
   lw $t0, leftInput
@@ -450,7 +460,7 @@ handleKeyY:
   jr $ra
 
 
-# Handle 'O': Move up and right, then draw a pixel at that location.
+# Handle 'o': Move up and right, then draw a pixel at that location.
 handleKeyO:
   # Load the values of leftInput, rightInput, upInput, and downInput
   lw $t0, leftInput
@@ -481,7 +491,7 @@ skipUpRight:
   jr $ra
 
 
-# Handle 'N': Move down and left, then draw a pixel at that location
+# Handle 'n': Move down and left, then draw a pixel at that location
 handleKeyN:
   # Load the values of leftInput, rightInput, upInput, and downInput
   lw $t0, leftInput
@@ -512,7 +522,7 @@ handleKeyN:
   jr $ra
 
 
-# Handle 'M': Move down and right, then draw a pixel at that location
+# Handle 'm': Move down and right, then draw a pixel at that location
 handleKeyM:
   # Load the values of leftInput, rightInput, upInput, and downInput
   lw $t0, leftInput
@@ -543,13 +553,13 @@ handleKeyM:
   jr $ra
 
 
-# Handle 'D': Delete the current pixel, but do not move
+# Handle 'd': Delete the current pixel, but do not move
 handleKeyD:
   sw $s3, 0($s1)                # Write a background-colored pixel (delete)
   jr $ra
 
 
-# Handle 'Q': Exit the program
+# Handle 'q': Exit the program
 handleKeyQ:
   li $v0, 10                    # Set syscall code for exit
   syscall                       # Perform the syscall
@@ -557,9 +567,9 @@ handleKeyQ:
   
   
   
-# Draw Line
-# =========
+# === Draw Line ===
 # Desc: The following subroutines allow you to draw a line to the edge of the screen
+#       in the specified direction.
 
 # Draw 'J': Draw a pixel to the left until the border is met
 drawKeyJ:
@@ -797,8 +807,7 @@ drawKeyM:
 
 
 
-# Pixel Colors
-# ============
+# === Pixel Colors ===
 # Desc: These subroutines set the color of the pixels.
 
 # Set the color to red
