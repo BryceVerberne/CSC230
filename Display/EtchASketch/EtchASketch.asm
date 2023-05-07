@@ -37,6 +37,12 @@
   white:        .word 0xFFFFFFFF  # Color white
   black:        .word 0x00000000  # Background color (black)
   bmdAddress:   .word 0x10010000  # Base Memory Address (BMD) for storing state
+  
+  colorOffset:  .word 0
+  upInput:      .word 0
+  downInput:    .word 0
+  rightInput:   .word 0
+  leftInput:    .word 0
 
 .text
 .globl main
@@ -48,23 +54,20 @@ main:
   sb $t8, 0($t9)  # Set the interrupt enable bit in KR
 
   # Get the starting color and store it into our color tracker (currentColor)
-  lw $t1, blue
-  sw $t1, currentColor
+  lw $s0, blue
+  sw $s0, currentColor
+  
+  # Load the Base Memory Address (BMD) into $s1
+  lw $s1, bmdAddress
 
   # Load permanent color values into save registers
-  lw $s0, black
-  lw $s1, olive
   lw $s2, white
-
-  # Load the Base Memory Address (BMD) into $t2
-  lw $t2, bmdAddress
-  
-  li $t7, 0  # Load our color offset with 0
+  lw $s3, black
+  lw $s4, olive
 
   # Draw a border around the bitmap display and mark the center
   jal createBorder
   jal markCenter
-
 
 loop:  # Infinite loop to keep the program running
   b loop
@@ -73,8 +76,8 @@ loop:  # Infinite loop to keep the program running
 # Title: createBorder
 # Desc:  This subroutine draws a olive-colored border around the bitmap
 createBorder:
-  addi $sp, $sp, -4  # Reserve space on the stack for return address and $t2
-  sw $t2, 0($sp)     # Store $t2 on the stack
+  addi $sp, $sp, -4  # Reserve space on the stack for return address and $s1
+  sw $s1, 0($sp)     # Store $s1 on the stack
   
   li $t0, 0          # Initialize $t0 to zero
   
@@ -82,8 +85,8 @@ createBorder:
   topBorder:
     beq $t0, 63, endTop      # If we have drawn 64 pixels, exit the loop
     
-    addi $t2, $t2, 4         # Move the buffer pointer one pixel to the right
-    sw $s1, 0($t2)           # Write the border color pixel to the buffer
+    addi $s1, $s1, 4         # Move the buffer pointer one pixel to the right
+    sw $s4, 0($s1)           # Write the border color pixel to the buffer
     
     addi $t0, $t0, 1         # Increment pixel counter
     
@@ -96,8 +99,8 @@ createBorder:
   rightBorder:
     beq $t0, 63, endRight    # If we have drawn 64 pixels, exit the loop
     
-    addi $t2, $t2, 256       # Move the buffer pointer one pixel down
-    sw $s1, 0($t2)           # Write the border color pixel to the buffer
+    addi $s1, $s1, 256       # Move the buffer pointer one pixel down
+    sw $s4, 0($s1)           # Write the border color pixel to the buffer
     
     addi $t0, $t0, 1         # Increment pixel counter
     
@@ -110,8 +113,8 @@ createBorder:
   bottomBorder:
     beq $t0, 63, endBottom   # If we have drawn 64 pixels, exit the loop
     
-    addi $t2, $t2, -4        # Move the buffer pointer one pixel to the left
-    sw $s1, 0($t2)           # Write the border color pixel to the buffer
+    addi $s1, $s1, -4        # Move the buffer pointer one pixel to the left
+    sw $s4, 0($s1)           # Write the border color pixel to the buffer
     
     addi $t0, $t0, 1         # Increment pixel counter
     
@@ -124,15 +127,15 @@ createBorder:
   leftBorder:
     beq $t0, 63, endLeft     # If we have drawn 64 pixels, exit the loop
     
-    addi $t2, $t2, -256      # Move the buffer pointer one pixel up
-    sw $s1, 0($t2)           # Write the border color pixel to the buffer
+    addi $s1, $s1, -256      # Move the buffer pointer one pixel up
+    sw $s4, 0($s1)           # Write the border color pixel to the buffer
     
     addi $t0, $t0, 1         # Increment pixel counter
     
     b leftBorder             # Branch back to leftBorder to draw the next pixel
   endLeft:
   
-  lw $t2, 0($sp)    # Restore $t2 from the stack
+  lw $s1, 0($sp)    # Restore $s1 from the stack
   addi $sp, $sp, 4  # Release stack
   
   jr $ra
@@ -143,8 +146,8 @@ createBorder:
 markCenter:
 
   # The base address of the bitmap display in MARS is 0x10008000 (4096*8 + 0x8000).
-  addi $t2, $t2, 8320  # Calculate the center pixel address: 0x10008000 + 2080 = 0x10008920
-  sw $s2, 0($t2)       # Store the value of $s2 at the calculated center pixel address
+  addi $s1, $s1, 8320  # Calculate the center pixel address: 0x10008000 + 2080 = 0x10008920
+  sw $s2, 0($s1)       # Store the value of $s2 at the calculated center pixel address
 
   jr $ra
 
@@ -257,8 +260,8 @@ checkG:
 
 endSwitch:
   # Save the new state
-  sw $t1, currentColor
-  sw $t2, bmdAddress
+  sw $s0, currentColor
+  sw $s1, bmdAddress
 
   # Epilog: Restore $ra and return
   lw $ra, 0($sp)
@@ -271,137 +274,229 @@ endSwitch:
 # Desc: These subroutines handle key presses and write pixels to a bitmap display.
 
 # Handle 'J': Draw a pixel at the current location and move one to the left
-handleKeyJ:
-  beq $t3, 31, skipLeft         # Check if at the left border (x-coordinate is 31)
+handleKeyJ: 
+  # Load the values of leftInput and rightInput
+  lw $t0, leftInput
+  lw $t1, rightInput
+
+  beq $t0, 31, skipLeft         # Check if at the left border (x-coordinate is 31)
   
-    addi $t3, $t3, 1            # Increment $t3 by 1 (move left)
-    addi $t4, $t4, -1           # Decrement $t4 by 1 (update remaining space right)
+    addi $t0, $t0, 1            # Increment $t0 by 1 (move left)
+    addi $t1, $t1, -1           # Decrement $t1 by 1 (update remaining space right)
     
-    addi $t2, $t2, -4           # Decrement pointer by 4 bytes (move left)
-    sw $t1, 0($t2)              # Write a pixel
+    addi $s1, $s1, -4           # Decrement pointer by 4 bytes (move left)
+    sw $s0, 0($s1)              # Write a pixel
     
   skipLeft:
   
+  # Store the updated values back to memory
+  sw $t0, leftInput
+  sw $t1, rightInput
+  
   jr $ra
+
 
 # Handle 'K': Draw a pixel at the current location and move down one row
 handleKeyK:
-  beq $t6, 30, skipDown         # Check if at the bottom border (y-coordinate is 30)
+  # Load the values of upInput and downInput
+  lw $t0, upInput
+  lw $t1, downInput
+
+  beq $t1, 30, skipDown         # Check if at the bottom border (y-coordinate is 30)
   
-    addi $t6, $t6, 1            # Increment $t6 by 1 (move down)
-    addi $t5, $t5, -1           # Decrement $t5 by 1 (update remaining space up)
+    addi $t1, $t1, 1            # Increment $t1 by 1 (move down)
+    addi $t0, $t0, -1           # Decrement $t0 by 1 (update remaining space up)
     
-    addi $t2, $t2, 256          # Increment pointer by 256 bytes (move down)
-    sw $t1, 0($t2)              # Write a pixel
+    addi $s1, $s1, 256          # Increment pointer by 256 bytes (move down)
+    sw $s0, 0($s1)              # Write a pixel
     
   skipDown:
   
+  # Store the updated values back to memory
+  sw $t0, upInput
+  sw $t1, downInput
+ 
   jr $ra
+
 
 # Handle 'L': Draw a pixel at the current location and move one to the right
 handleKeyL:
-  beq $t4, 30, skipRight        # Check if at the right border (x-coordinate is 30)
+  # Load the values of leftInput and rightInput
+  lw $t0, leftInput
+  lw $t1, rightInput
+
+  beq $t1, 30, skipRight        # Check if at the right border (x-coordinate is 30)
   
-    addi $t4, $t4, 1            # Increment $t4 by 1 (move right)
-    addi $t3, $t3, -1           # Decrement $t3 by 1 (update remaining space left)
+    addi $t1, $t1, 1            # Increment $t1 by 1 (move right)
+    addi $t0, $t0, -1           # Decrement $t0 by 1 (update remaining space left)
     
-    addi $t2, $t2, 4            # Increment pointer by 4 bytes (move right)
-    sw $t1, 0($t2)              # Write a pixel
+    addi $s1, $s1, 4            # Increment pointer by 4 bytes (move right)
+    sw $s0, 0($s1)              # Write a pixel
     
   skipRight:
   
+  # Store the updated values back to memory
+  sw $t0, leftInput
+  sw $t1, rightInput
+  
   jr $ra
+
 
 # Handle 'I': Draw a pixel at the current location and move up one row
 handleKeyI:
-  beq $t5, 31, skipUp           # Check if at the top border (y-coordinate is 31)
+  # Load the values of upInput and downInput
+  lw $t0, upInput
+  lw $t1, downInput
+
+  beq $t0, 31, skipUp           # Check if at the top border (y-coordinate is 31)
   
-    addi $t5, $t5, 1            # Increment $t5 by 1 (move up)
-    addi $t6, $t6, -1           # Decrement $t6 by 1 (update remaining space down)
+    addi $t0, $t0, 1            # Increment $t0 by 1 (move up)
+    addi $t1, $t1, -1           # Decrement $t1 by 1 (update remaining space down)
     
-    addi $t2, $t2, -256         # Decrement pointer by 256 bytes (move up)
-    sw $t1, 0($t2)              # Write a pixel
+    addi $s1, $s1, -256         # Decrement pointer by 256 bytes (move up)
+    sw $s0, 0($s1)              # Write a pixel
     
   skipUp:
   
+  # Store the updated values back to memory
+  sw $t0, upInput
+  sw $t1, downInput
+  
   jr $ra
 
-# Handle 'Y': Draw a pixel at the current location and move up and left
-handleKeyY:
-  beq $t5, 31, skipUpLeft       # Check if at the top border (y-coordinate is 31)
-    beq $t3, 31, skipUpLeft     # Check if at the left border (x-coordinate is 31)
+
+# Handle 'Y': Draw a pixel at the current location, then move up and left
+handleKeyY:  
+  # Load the values of leftInput, rightInput, upInput, and downInput
+  lw $t0, leftInput
+  lw $t1, rightInput
+  lw $t2, upInput
+  lw $t3, downInput
+
+  beq $t2, 31, skipUpLeft       # Check if at the top border (y-coordinate is 31)
+    beq $t0, 31, skipUpLeft     # Check if at the left border (x-coordinate is 31)
     
-      addi $t5, $t5, 1          # Increment $t5 by 1 (move up)
-      addi $t6, $t6, -1         # Decrement $t6 by 1 (update remaining space down)
+
+      addi $t2, $t2, 1          # Increment upInput (move up)
+      addi $t3, $t3, -1         # Decrement downInput (update remaining space down)
       
-      addi $t3, $t3, 1          # Increment $t3 by 1 (move left)
-      addi $t4, $t4, -1         # Decrement $t4 by 1 (update remaining space right)
+      addi $t0, $t0, 1          # Increment leftInput (move left)
+      addi $t1, $t1, -1         # Decrement rightInput (update remaining space right)
     
-      addi $t2, $t2, -260       # Update pointer to move up and left
-      sw $t1, 0($t2)            # Write a pixel
+      addi $s1, $s1, -260       # Update pointer to move up and left
+      sw $s0, 0($s1)            # Write a pixel
       
   skipUpLeft:
+
+  # Store the updated values back to memory
+  sw $t0, leftInput
+  sw $t1, rightInput
+  sw $t2, upInput
+  sw $t3, downInput
   
+  # Return to the main loop
   jr $ra
 
-# Handle 'O': Draw a pixel at the current location and move up and right
+
+# Handle 'O': Draw a pixel at the current location, then move up and right
 handleKeyO:
-  beq $t5, 31, skipUpRight      # Check if at the top border (y-coordinate is 31)
-    beq $t4, 30, skipUpRight    # Check if at the right border (x-coordinate is 30)
+  # Load the values of leftInput, rightInput, upInput, and downInput
+  lw $t0, leftInput
+  lw $t1, rightInput
+  lw $t2, upInput
+  lw $t3, downInput
+
+  beq $t2, 31, skipUpRight      # Check if at the top border (y-coordinate is 31)
+    beq $t1, 30, skipUpRight    # Check if at the right border (x-coordinate is 30)
     
-      addi $t5, $t5, 1          # Increment $t5 by 1 (move up)
-      addi $t6, $t6, -1         # Decrement $t6 by 1 (update remaining space down)
+      addi $t2, $t2, 1          # Increment upInput (move up)
+      addi $t3, $t3, -1         # Decrement downInput (update remaining space down)
       
-      addi $t4, $t4, 1          # Increment $t4 by 1 (move right)
-      addi $t3, $t3, -1         # Decrement $t3 by 1 (update remaining space left)
+      addi $t1, $t1, 1          # Increment rightInput (move right)
+      addi $t0, $t0, -1         # Decrement leftInput (update remaining space left)
+    
+      addi $s1, $s1, -252       # Update pointer to move up and right
+      sw $s0, 0($s1)            # Write a pixel
       
-      addi $t2, $t2, -252       # Update pointer to move up and right
-      sw $t1, 0($t2)            # Write a pixel
-      
-  skipUpRight:
+skipUpRight:
+
+  # Store the updated values back to memory
+  sw $t0, leftInput
+  sw $t1, rightInput
+  sw $t2, upInput
+  sw $t3, downInput
   
+  # Return to the main
   jr $ra
+
 
 # Handle 'N': Draw a pixel at the current location and move down and left
 handleKeyN:
-  beq $t6, 30, skipDownLeft     # Check if at the bottom border (y-coordinate is 30)
-    beq $t3, 31, skipDownLeft   # Check if at the left border (x-coordinate is 31)
+  # Load the values of leftInput, rightInput, upInput, and downInput
+  lw $t0, leftInput
+  lw $t1, rightInput
+  lw $t2, upInput
+  lw $t3, downInput
+
+  beq $t3, 30, skipDownLeft     # Check if at the bottom border (y-coordinate is 30)
+    beq $t0, 31, skipDownLeft   # Check if at the left border (x-coordinate is 31)
     
-      addi $t6, $t6, 1          # Increment $t6 by 1 (move down)
-      addi $t5, $t5, -1         # Decrement $t5 by 1 (update remaining space up)
+      addi $t3, $t3, 1          # Increment $t3 by 1 (move down)
+      addi $t2, $t2, -1         # Decrement $t2 by 1 (update remaining space up)
       
-      addi $t3, $t3, 1          # Increment $t3 by 1 (move left)
-      addi $t4, $t4, -1         # Decrement $t4 by 1 (update remaining space right)
+      addi $t0, $t0, 1          # Increment $t0 by 1 (move left)
+      addi $t1, $t1, -1         # Decrement $t1 by 1 (update remaining space right)
       
-      addi $t2, $t2, 252        # Update pointer to move down and left
-      sw $t1, 0($t2)            # Write a pixel
+      addi $s1, $s1, 252        # Update pointer to move down and left
+      sw $s0, 0($s1)            # Write a pixel at the current location
       
   skipDownLeft:
   
-  jr $ra
+  # Store the updated values back to memory
+  sw $t0, leftInput
+  sw $t1, rightInput
+  sw $t2, upInput
+  sw $t3, downInput
+  
+  jr $ra                        # Return to the caller
+
 
 # Handle 'M': Draw a pixel at the current location and move down and right
 handleKeyM:
-  beq $t6, 30, skipDownRight    # Check if at the bottom border (y-coordinate is 30)
-    beq $t4, 30, skipDownRight  # Check if at the right border (x-coordinate is 30)
+  # Load the values of leftInput, rightInput, upInput, and downInput
+  lw $t0, leftInput
+  lw $t1, rightInput
+  lw $t2, upInput
+  lw $t3, downInput
+
+  beq $t3, 30, skipDownRight    # Check if at the bottom border (y-coordinate is 30)
+    beq $t1, 30, skipDownRight  # Check if at the right border (x-coordinate is 30)
     
-      addi $t6, $t6, 1          # Increment $t6 by 1 (move down)
-      addi $t5, $t5, -1         # Decrement $t5 by 1 (update remaining space up)
+      addi $t3, $t3, 1          # Increment $t3 by 1 (move down)
+      addi $t2, $t2, -1         # Decrement $t2 by 1 (update remaining space up)
       
-      addi $t4, $t4, 1          # Increment $t4 by 1 (move right)
-      addi $t3, $t3, -1         # Decrement $t3 by 1 (update remaining space left)
+      addi $t1, $t1, 1          # Increment $t1 by 1 (move right)
+      addi $t0, $t0, -1         # Decrement $t0 by 1 (update remaining space left)
       
-      addi $t2, $t2, 260        # Update pointer to move down and right
-      sw $t1, 0($t2)            # Write a pixel
+      addi $s1, $s1, 260        # Update pointer to move down and right
+      sw $s0, 0($s1)            # Write a pixel at the current location
        
   skipDownRight:
   
+  # Store the updated values back to memory
+  sw $t0, leftInput
+  sw $t1, rightInput
+  sw $t2, upInput
+  sw $t3, downInput
+  
   jr $ra
+
 
 # Handle 'D': Delete the current pixel, but do not move
 handleKeyD:
-  sw $s0, 0($t2)                # Write a background-colored pixel (delete)
+  sw $s3, 0($s1)                # Write a background-colored pixel (delete)
   jr $ra
+
 
 # Handle 'Q': Exit the program
 handleKeyQ:
@@ -416,77 +511,68 @@ handleKeyQ:
 
 # Set the color to red
 setColorRed:
-  addi $sp, $sp, -4            # Decrement stack pointer to make space for $t0
-  sw $t0, 0($sp)               # Save $t0 on the stack
-
   lw $t0, red                  # Load the base red color value into $t0
-  add $t0, $t0, $t7           # Add the current gradient value to the base red color
+  lw $t1, colorOffset
+  add $t0, $t0, $t1            # Add the current gradient value to the base red color
 
-  bne $t1, $t0, setRed         # If current color is not red, jump to setRed
-    beq $t7, 240, exitRed      # If red gradient counter is 240, exit subroutine
+  bne $s0, $t0, setRed         # If current color is not red, jump to setRed
+    beq $t1, 240, exitRed      # If red gradient counter is 240, exit subroutine
 
-      addi $t7, $t7, 30        # Increment the red gradient counter
-      addi $t1, $t1, 30        # Add 30 to the red component of the current color
+      addi $t1, $t1, 30        # Increment the red gradient counter
+      addi $s0, $s0, 30        # Add 30 to the red component of the current color
 
     b exitRed                  # Jump to exitRed
   setRed:
-    lw $t1, red                # Load the base red color value into $t1
-    li $t7, 0                  # Initialize red gradient counter to 0
+    lw $s0, red                # Load the base red color value into $s0
+    li $t1, 0                  # Initialize red gradient counter to 0
   exitRed:
-
-  lw $t0, 0($sp)               # Restore $t0 from the stack
-  addi $sp, $sp, 4             # Increment stack pointer to free the space
+  
+  sw $t1, colorOffset
 
   jr $ra                      
 
   
 # Set the color to blue
 setColorBlue:
-  addi $sp, $sp, -4            # Decrement stack pointer to make space for $t0
-  sw $t0, 0($sp)               # Save $t0 on the stack
-
   lw $t0, blue                 # Load the base blue color value into $t0
-  add $t0, $t0, $t7            # Add the current gradient value to the base blue color
+  lw $t1, colorOffset
+  add $t0, $t0, $t1            # Add the current gradient value to the base blue color
 
-  bne $t1, $t0, setBlue        # If current color is not blue, jump to setBlue
-    beq $t7, 240, exitBlue     # If blue gradient counter is 240, exit subroutine
+  bne $s0, $t0, setBlue        # If current color is not blue, jump to setBlue
+    beq $t1, 240, exitBlue     # If blue gradient counter is 240, exit subroutine
 
-      addi $t7, $t7, 30        # Increment the blue gradient counter
-      addi $t1, $t1, 30        # Add 30 to the blue component of the current color
+      addi $t1, $t1, 30        # Increment the blue gradient counter
+      addi $s0, $s0, 30        # Add 30 to the blue component of the current color
 
     b exitBlue                 # Jump to exitBlue
   setBlue:
-    lw $t1, blue               # Load the base blue color value into $t1
-    li $t7, 0                  # Initialize blue gradient counter to 0
+    lw $s0, blue               # Load the base blue color value into $s0
+    li $t1, 0                  # Initialize blue gradient counter to 0
   exitBlue:
-
-  lw $t0, 0($sp)               # Restore $t0 from the stack
-  addi $sp, $sp, 4             # Increment stack pointer to free the space
+  
+  sw $t1, colorOffset
 
   jr $ra
  
   
 # Set the color to green
 setColorGreen:
-  addi $sp, $sp, -4            # Decrement stack pointer to make space for $t0
-  sw $t0, 0($sp)               # Save $t0 on the stack
-
   lw $t0, green                # Load the base green color value into $t0
-  add $t0, $t0, $t7            # Add the current gradient value to the base green color
+  lw $t1, colorOffset
+  add $t0, $t0, $t1            # Add the current gradient value to the base green color
 
-  bne $t1, $t0, setGreen       # If current color is not green, jump to setGreen
-    beq $t7, 240, exitGreen    # If green gradient counter is 240, exit subroutine
+  bne $s0, $t0, setGreen       # If current color is not green, jump to setGreen
+    beq $t1, 240, exitGreen    # If green gradient counter is 240, exit subroutine
 
-      addi $t7, $t7, 30        # Increment the green gradient counter
-      addi $t1, $t1, 30        # Add 30 to the green component of the current color
+      addi $t1, $t1, 30        # Increment the green gradient counter
+      addi $s0, $s0, 30        # Add 30 to the green component of the current color
 
     b exitGreen                # Jump to exitGreen
   setGreen:
-    lw $t1, green              # Load the base green color value into $t1
-    li $t7, 0                  # Initialize green gradient counter to 0
+    lw $s0, green              # Load the base green color value into $s0
+    li $t1, 0                  # Initialize green gradient counter to 0
   exitGreen:
-
-  lw $t0, 0($sp)               # Restore $t0 from the stack
-  addi $sp, $sp, 4             # Increment stack pointer to free the space
+  
+  sw $t1, colorOffset
 
   jr $ra
