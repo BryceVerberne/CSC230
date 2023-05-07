@@ -58,6 +58,8 @@ main:
 
   # Load the Base Memory Address (BMD) into $t2
   lw $t2, bmdAddress
+  
+  li $t7, 0  # Load our color offset with 0
 
   # Draw a border around the bitmap display and mark the center
   jal createBorder
@@ -391,7 +393,7 @@ handleKeyM:
       
       addi $t2, $t2, 260        # Update pointer to move down and right
       sw $t1, 0($t2)            # Write a pixel
-      
+       
   skipDownRight:
   
   jr $ra
@@ -414,15 +416,77 @@ handleKeyQ:
 
 # Set the color to red
 setColorRed:
-  lw $t1, red   # Load the red color value
-  jr $ra
+  addi $sp, $sp, -4            # Decrement stack pointer to make space for $t0
+  sw $t0, 0($sp)               # Save $t0 on the stack
+
+  lw $t0, red                  # Load the base red color value into $t0
+  add $t0, $t0, $t7           # Add the current gradient value to the base red color
+
+  bne $t1, $t0, setRed         # If current color is not red, jump to setRed
+    beq $t7, 240, exitRed      # If red gradient counter is 240, exit subroutine
+
+      addi $t7, $t7, 30        # Increment the red gradient counter
+      addi $t1, $t1, 30        # Add 30 to the red component of the current color
+
+    b exitRed                  # Jump to exitRed
+  setRed:
+    lw $t1, red                # Load the base red color value into $t1
+    li $t7, 0                  # Initialize red gradient counter to 0
+  exitRed:
+
+  lw $t0, 0($sp)               # Restore $t0 from the stack
+  addi $sp, $sp, 4             # Increment stack pointer to free the space
+
+  jr $ra                      
+
   
 # Set the color to blue
 setColorBlue:
-  lw $t1, blue  # Load the blue color value
+  addi $sp, $sp, -4            # Decrement stack pointer to make space for $t0
+  sw $t0, 0($sp)               # Save $t0 on the stack
+
+  lw $t0, blue                 # Load the base blue color value into $t0
+  add $t0, $t0, $t7            # Add the current gradient value to the base blue color
+
+  bne $t1, $t0, setBlue        # If current color is not blue, jump to setBlue
+    beq $t7, 240, exitBlue     # If blue gradient counter is 240, exit subroutine
+
+      addi $t7, $t7, 30        # Increment the blue gradient counter
+      addi $t1, $t1, 30        # Add 30 to the blue component of the current color
+
+    b exitBlue                 # Jump to exitBlue
+  setBlue:
+    lw $t1, blue               # Load the base blue color value into $t1
+    li $t7, 0                  # Initialize blue gradient counter to 0
+  exitBlue:
+
+  lw $t0, 0($sp)               # Restore $t0 from the stack
+  addi $sp, $sp, 4             # Increment stack pointer to free the space
+
   jr $ra
+ 
   
 # Set the color to green
 setColorGreen:
-  lw $t1, green # Load the green color value
+  addi $sp, $sp, -4            # Decrement stack pointer to make space for $t0
+  sw $t0, 0($sp)               # Save $t0 on the stack
+
+  lw $t0, green                # Load the base green color value into $t0
+  add $t0, $t0, $t7            # Add the current gradient value to the base green color
+
+  bne $t1, $t0, setGreen       # If current color is not green, jump to setGreen
+    beq $t7, 240, exitGreen    # If green gradient counter is 240, exit subroutine
+
+      addi $t7, $t7, 30        # Increment the green gradient counter
+      addi $t1, $t1, 30        # Add 30 to the green component of the current color
+
+    b exitGreen                # Jump to exitGreen
+  setGreen:
+    lw $t1, green              # Load the base green color value into $t1
+    li $t7, 0                  # Initialize green gradient counter to 0
+  exitGreen:
+
+  lw $t0, 0($sp)               # Restore $t0 from the stack
+  addi $sp, $sp, 4             # Increment stack pointer to free the space
+
   jr $ra
