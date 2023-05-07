@@ -59,11 +59,10 @@ main:
   # Load the Base Memory Address (BMD) into $t2
   lw $t2, bmdAddress
 
-  # Draw a border around the bitmap display
+  # Draw a border around the bitmap display and mark the center
   jal createBorder
-  
-  # Mark the center of the bitmap display and move the base address to this position
   jal markCenter
+
 
 loop:  # Infinite loop to keep the program running
   b loop
@@ -271,50 +270,130 @@ endSwitch:
 
 # Handle 'J': Draw a pixel at the current location and move one to the left
 handleKeyJ:
-  addi $t2, $t2, -4             # Decrement pointer by 4 bytes (move left)
-  sw $t1, 0($t2)                # Write a pixel
+  beq $t3, 31, skipLeft         # Check if at the left border (x-coordinate is 31)
+  
+    addi $t3, $t3, 1            # Increment $t3 by 1 (move left)
+    addi $t4, $t4, -1           # Decrement $t4 by 1 (update remaining space right)
+    
+    addi $t2, $t2, -4           # Decrement pointer by 4 bytes (move left)
+    sw $t1, 0($t2)              # Write a pixel
+    
+  skipLeft:
+  
   jr $ra
 
 # Handle 'K': Draw a pixel at the current location and move down one row
 handleKeyK:
-  addi $t2, $t2, 256            # Increment pointer by 256 bytes (move down)
-  sw $t1, 0($t2)                # Write a pixel
+  beq $t6, 30, skipDown         # Check if at the bottom border (y-coordinate is 30)
+  
+    addi $t6, $t6, 1            # Increment $t6 by 1 (move down)
+    addi $t5, $t5, -1           # Decrement $t5 by 1 (update remaining space up)
+    
+    addi $t2, $t2, 256          # Increment pointer by 256 bytes (move down)
+    sw $t1, 0($t2)              # Write a pixel
+    
+  skipDown:
+  
   jr $ra
 
 # Handle 'L': Draw a pixel at the current location and move one to the right
 handleKeyL:
-  addi $t2, $t2, 4              # Increment pointer by 4 bytes (move right)
-  sw $t1, 0($t2)                # Write a pixel
+  beq $t4, 30, skipRight        # Check if at the right border (x-coordinate is 30)
+  
+    addi $t4, $t4, 1            # Increment $t4 by 1 (move right)
+    addi $t3, $t3, -1           # Decrement $t3 by 1 (update remaining space left)
+    
+    addi $t2, $t2, 4            # Increment pointer by 4 bytes (move right)
+    sw $t1, 0($t2)              # Write a pixel
+    
+  skipRight:
+  
   jr $ra
 
 # Handle 'I': Draw a pixel at the current location and move up one row
 handleKeyI:
-  addi $t2, $t2, -256           # Decrement pointer by 256 bytes (move up)
-  sw $t1, 0($t2)                # Write a pixel
+  beq $t5, 31, skipUp           # Check if at the top border (y-coordinate is 31)
+  
+    addi $t5, $t5, 1            # Increment $t5 by 1 (move up)
+    addi $t6, $t6, -1           # Decrement $t6 by 1 (update remaining space down)
+    
+    addi $t2, $t2, -256         # Decrement pointer by 256 bytes (move up)
+    sw $t1, 0($t2)              # Write a pixel
+    
+  skipUp:
+  
   jr $ra
 
 # Handle 'Y': Draw a pixel at the current location and move up and left
 handleKeyY:
-  addi $t2, $t2, -260           # Update pointer to move up and left
-  sw $t1, 0($t2)                # Write a pixel
+  beq $t5, 31, skipUpLeft       # Check if at the top border (y-coordinate is 31)
+    beq $t3, 31, skipUpLeft     # Check if at the left border (x-coordinate is 31)
+    
+      addi $t5, $t5, 1          # Increment $t5 by 1 (move up)
+      addi $t6, $t6, -1         # Decrement $t6 by 1 (update remaining space down)
+      
+      addi $t3, $t3, 1          # Increment $t3 by 1 (move left)
+      addi $t4, $t4, -1         # Decrement $t4 by 1 (update remaining space right)
+    
+      addi $t2, $t2, -260       # Update pointer to move up and left
+      sw $t1, 0($t2)            # Write a pixel
+      
+  skipUpLeft:
+  
   jr $ra
 
 # Handle 'O': Draw a pixel at the current location and move up and right
 handleKeyO:
-  addi $t2, $t2, -252           # Update pointer to move up and right
-  sw $t1, 0($t2)                # Write a pixel
+  beq $t5, 31, skipUpRight      # Check if at the top border (y-coordinate is 31)
+    beq $t4, 30, skipUpRight    # Check if at the right border (x-coordinate is 30)
+    
+      addi $t5, $t5, 1          # Increment $t5 by 1 (move up)
+      addi $t6, $t6, -1         # Decrement $t6 by 1 (update remaining space down)
+      
+      addi $t4, $t4, 1          # Increment $t4 by 1 (move right)
+      addi $t3, $t3, -1         # Decrement $t3 by 1 (update remaining space left)
+      
+      addi $t2, $t2, -252       # Update pointer to move up and right
+      sw $t1, 0($t2)            # Write a pixel
+      
+  skipUpRight:
+  
   jr $ra
 
 # Handle 'N': Draw a pixel at the current location and move down and left
 handleKeyN:
-  addi $t2, $t2, 252            # Update pointer to move down and left
-  sw $t1, 0($t2)                # Write a pixel
+  beq $t6, 30, skipDownLeft     # Check if at the bottom border (y-coordinate is 30)
+    beq $t3, 31, skipDownLeft   # Check if at the left border (x-coordinate is 31)
+    
+      addi $t6, $t6, 1          # Increment $t6 by 1 (move down)
+      addi $t5, $t5, -1         # Decrement $t5 by 1 (update remaining space up)
+      
+      addi $t3, $t3, 1          # Increment $t3 by 1 (move left)
+      addi $t4, $t4, -1         # Decrement $t4 by 1 (update remaining space right)
+      
+      addi $t2, $t2, 252        # Update pointer to move down and left
+      sw $t1, 0($t2)            # Write a pixel
+      
+  skipDownLeft:
+  
   jr $ra
 
 # Handle 'M': Draw a pixel at the current location and move down and right
 handleKeyM:
-  addi $t2, $t2, 260            # Update pointer to move down and right
-  sw $t1, 0($t2)                # Write a pixel
+  beq $t6, 30, skipDownRight    # Check if at the bottom border (y-coordinate is 30)
+    beq $t4, 30, skipDownRight  # Check if at the right border (x-coordinate is 30)
+    
+      addi $t6, $t6, 1          # Increment $t6 by 1 (move down)
+      addi $t5, $t5, -1         # Decrement $t5 by 1 (update remaining space up)
+      
+      addi $t4, $t4, 1          # Increment $t4 by 1 (move right)
+      addi $t3, $t3, -1         # Decrement $t3 by 1 (update remaining space left)
+      
+      addi $t2, $t2, 260        # Update pointer to move down and right
+      sw $t1, 0($t2)            # Write a pixel
+      
+  skipDownRight:
+  
   jr $ra
 
 # Handle 'D': Delete the current pixel, but do not move
@@ -326,7 +405,7 @@ handleKeyD:
 handleKeyQ:
   li $v0, 10                    # Set syscall code for exit
   syscall                       # Perform the syscall
-  jr $ra                        # Return to caller
+  jr $ra
 
 
 # Pixel Colors
