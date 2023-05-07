@@ -571,237 +571,202 @@ handleKeyQ:
 # Desc: The following subroutines allow you to draw a line to the edge of the screen
 #       in the specified direction.
 
-# Draw 'J': Draw a pixel to the left until the border is met
+# Draw 'J': Continuously draw pixels to the left until the border is met
 drawKeyJ:
-  # Load the values of leftInput and rightInput
-  lw $t0, leftInput
-  lw $t1, rightInput
+  # Prolog: Store the value of $ra
+  addi $sp, $sp, -4
+  sw $ra, 0($sp)
 
   # Loop to draw the pixels to the left
   drawJ:
+    lw $t0, leftInput          # Load 'leftInput' into '$t0' for evaluation
     beq $t0, 31, endJ          # Check if at the left border (x-coordinate is 31)
   
-    addi $t0, $t0, 1           # Increment $t0 by 1 (move left)
-    addi $t1, $t1, -1          # Decrement $t1 by 1 (update remaining space right)
+    jal handleKeyJ             # Call handleKeyJ to draw the pixel and update the position
     
-    addi $s1, $s1, -4          # Decrement pointer by 4 bytes (move left)
-    sw $s0, 0($s1)             # Write a pixel
-    
-    b drawJ
+    b drawJ                    # Repeat the loop
   endJ:
   
-  # Store the updated values back to memory
-  sw $t0, leftInput
-  sw $t1, rightInput
+  # Epilog: Restore $ra
+  lw $ra, 0($sp)
+  addi $sp, $sp, 4
   
   jr $ra
   
   
-# Draw 'K': Draw a pixel down until the border is met
+# Draw 'K': Continuously draw pixels down until the border is met
 drawKeyK:
-  # Load the values of upInput and downInput
-  lw $t0, upInput
-  lw $t1, downInput
+  # Prolog: Store the value of $ra
+  addi $sp, $sp, -4
+  sw $ra, 0($sp)
 
   # Loop to draw the pixels down
   drawK:
-    beq $t1, 30, endK          # Check if at the bottom border (y-coordinate is 30)
+    lw $t0, downInput          # Load 'downInput' into '$t0' for evaluation
+    beq $t0, 30, endK          # Check if at the bottom border (y-coordinate is 30)
   
-    addi $t1, $t1, 1           # Increment $t1 by 1 (move down)
-    addi $t0, $t0, -1          # Decrement $t0 by 1 (update remaining space up)
+    jal handleKeyK             # Call handleKeyK to draw the pixel and update the position
     
-    addi $s1, $s1, 256         # Increment pointer by 256 bytes (move down)
-    sw $s0, 0($s1)             # Write a pixel
-    
-    b drawK
+    b drawK                    # Repeat the loop
   endK:
   
-  # Store the updated values back to memory
-  sw $t0, upInput
-  sw $t1, downInput
+  # Epilog: Restore $ra
+  lw $ra, 0($sp)
+  addi $sp, $sp, 4
   
   jr $ra
+
   
   
-# Draw 'L': Draw a pixel to the right until the border is met
+# Draw 'L': Continuously draw pixels to the right until the border is met
 drawKeyL:
-  # Load the values of leftInput and rightInput
-  lw $t0, leftInput
-  lw $t1, rightInput
+  # Prolog: Store the value of $ra
+  addi $sp, $sp, -4
+  sw $ra, 0($sp)
 
   # Loop to draw the pixels to the right
   drawL:
-    beq $t1, 30, endL           # Check if at the right border (x-coordinate is 30)
+    lw $t0, rightInput          # Load 'rightInput' into '$t0' for evaluation
+    beq $t0, 30, endL           # Check if at the right border (x-coordinate is 30)
   
-    addi $t1, $t1, 1            # Increment $t1 by 1 (move right)
-    addi $t0, $t0, -1           # Decrement $t0 by 1 (update remaining space left)
+    jal handleKeyL              # Call handleKeyL to draw the pixel and update the position
     
-    addi $s1, $s1, 4            # Increment pointer by 4 bytes (move right)
-    sw $s0, 0($s1)              # Write a pixel
-    
-    b drawL
+    b drawL                     # Repeat the loop
   endL:
   
-  # Store the updated values back to memory
-  sw $t0, leftInput
-  sw $t1, rightInput
+  # Epilog: Restore $ra
+  lw $ra, 0($sp)
+  addi $sp, $sp, 4
 
   jr $ra
   
   
-# Draw 'I': Draw a pixel upwards until the border is met
+# Draw 'I': Continuously draw pixels upwards until the border is met
 drawKeyI:
-  # Load the values of upInput and downInput
-  lw $t0, upInput
-  lw $t1, downInput
+  # Prolog: Store the value of $ra
+  addi $sp, $sp, -4
+  sw $ra, 0($sp)
 
   # Loop to draw the pixels up 
   drawI:
+    lw $t0, upInput             # Load 'upInput' into '$t0' for evaluation
     beq $t0, 31, endI           # Check if at the top border (y-coordinate is 31)
   
-    addi $t0, $t0, 1            # Increment $t0 by 1 (move up)
-    addi $t1, $t1, -1           # Decrement $t1 by 1 (update remaining space down)
+    jal handleKeyI              # Call handleKeyI to draw the pixel and update the position
     
-    addi $s1, $s1, -256         # Decrement pointer by 256 bytes (move up)
-    sw $s0, 0($s1)              # Write a pixel
-    
-    b drawI
+    b drawI                     # Repeat the loop
   endI:
   
-  # Store the updated values back to memory
-  sw $t0, upInput
-  sw $t1, downInput
+  # Epilog: Restore $ra
+  lw $ra, 0($sp)
+  addi $sp, $sp, 4
 
   jr $ra
+
   
   
-# Draw 'Y': Draw a pixel up and left until the border is met
+# Draw 'Y': Continuously draw pixels diagonally up and left until the border is met
 drawKeyY:
-  # Load the values of leftInput, rightInput, upInput, and downInput
-  lw $t0, leftInput
-  lw $t1, rightInput
-  lw $t2, upInput
-  lw $t3, downInput
+  # Prolog: Store the value of $ra
+  addi $sp, $sp, -4
+  sw $ra, 0($sp)
 
   # Loop to draw the pixels up and left
   drawY:
-    beq $t2, 31, endY           # Check if at the top border (y-coordinate is 31)
+    # Load 'leftInput' and 'upInput' into $t# registers for evaluation
+    lw $t0, leftInput
+    lw $t1, upInput
+    
     beq $t0, 31, endY           # Check if at the left border (x-coordinate is 31)
+    beq $t1, 31, endY           # Check if at the top border (y-coordinate is 31)
     
-    addi $t2, $t2, 1            # Increment upInput (move up)
-    addi $t3, $t3, -1           # Decrement downInput (update remaining space down)
-      
-    addi $t0, $t0, 1            # Increment leftInput (move left)
-    addi $t1, $t1, -1           # Decrement rightInput (update remaining space right)
-    
-    addi $s1, $s1, -260         # Update pointer to move up and left
-    sw $s0, 0($s1)              # Write a pixel
+    jal handleKeyY              # Call handleKeyY to draw the pixel and update the position
         
-    b drawY 
+    b drawY                     # Repeat the loop
   endY:
-
-  # Store the updated values back to memory
-  sw $t0, leftInput
-  sw $t1, rightInput
-  sw $t2, upInput
-  sw $t3, downInput
+  
+  # Epilog: Restore $ra
+  lw $ra, 0($sp)
+  addi $sp, $sp, 4
   
   jr $ra
   
-# Draw 'O': Draw a pixel up and right until the border is met 
+# Draw 'O': Continuously draw pixels diagonally up and right until the border is met 
 drawKeyO:
-  # Load the values of leftInput, rightInput, upInput, and downInput
-  lw $t0, leftInput
-  lw $t1, rightInput
-  lw $t2, upInput
-  lw $t3, downInput
+  # Prolog: Store the value of $ra
+  addi $sp, $sp, -4
+  sw $ra, 0($sp)
 
   # Loop to draw the pixels up and right
   drawO:
-    beq $t2, 31, endO           # Check if at the top border (y-coordinate is 31)
-    beq $t1, 30, endO           # Check if at the right border (x-coordinate is 30)
+    # Load 'rightInput' and 'upInput' into $t# registers for evaluation
+    lw $t0, rightInput
+    lw $t1, upInput
     
-    addi $t2, $t2, 1            # Increment upInput (move up)
-    addi $t3, $t3, -1           # Decrement downInput (update remaining space down)
-      
-    addi $t1, $t1, 1            # Increment rightInput (move right)
-    addi $t0, $t0, -1           # Decrement leftInput (update remaining space left)
+    beq $t0, 30, endO           # Check if at the right border (x-coordinate is 30)
+    beq $t1, 31, endO           # Check if at the top border (y-coordinate is 31)
     
-    addi $s1, $s1, -252         # Update pointer to move up and right
-    sw $s0, 0($s1)              # Write a pixel
-    b drawO
+    jal handleKeyO              # Call handleKeyO to draw the pixel and update the position
+    
+    b drawO                     # Repeat the loop
   endO:
 
-  # Store the updated values back to memory
-  sw $t0, leftInput
-  sw $t1, rightInput
-  sw $t2, upInput
-  sw $t3, downInput
+  # Epilog: Restore $ra
+  lw $ra, 0($sp)
+  addi $sp, $sp, 4
   
   jr $ra
+
   
-# Draw 'N': Draw a pixel down and left until the border is met
+# Draw 'N': Continuously draw pixels diagonally down and left until the border is met
 drawKeyN:
-  # Load the values of leftInput, rightInput, upInput, and downInput
-  lw $t0, leftInput
-  lw $t1, rightInput
-  lw $t2, upInput
-  lw $t3, downInput
+  # Prolog: Store the value of $ra
+  addi $sp, $sp, -4
+  sw $ra, 0($sp)
 
   # Loop to draw the pixels down and left
   drawN:
-    beq $t3, 30, endN           # Check if at the bottom border (y-coordinate is 30)
+    # Load 'leftInput' and 'downInput' into $t# registers for evaluation
+    lw $t0, leftInput
+    lw $t1, downInput
+  
     beq $t0, 31, endN           # Check if at the left border (x-coordinate is 31)
+    beq $t1, 30, endN           # Check if at the bottom border (y-coordinate is 30)
     
-    addi $t3, $t3, 1            # Increment $t3 by 1 (move down)
-    addi $t2, $t2, -1           # Decrement $t2 by 1 (update remaining space up)
+    jal handleKeyN              # Call handleKeyN to draw the pixel and update the position
       
-    addi $t0, $t0, 1            # Increment $t0 by 1 (move left)
-    addi $t1, $t1, -1           # Decrement $t1 by 1 (update remaining space right)
-      
-    addi $s1, $s1, 252          # Update pointer to move down and left
-    sw $s0, 0($s1)              # Write a pixel at the current location
-      
-    b drawN    
+    b drawN                     # Repeat the loop
   endN:
   
-  # Store the updated values back to memory
-  sw $t0, leftInput
-  sw $t1, rightInput
-  sw $t2, upInput
-  sw $t3, downInput
+  # Epilog: Restore $ra
+  lw $ra, 0($sp)
+  addi $sp, $sp, 4
   
   jr $ra
   
-# Draw 'M': Draw a pixel down and right until the border is met
+# Draw 'M': Continuously draw pixels diagonally down and right until the border is met
 drawKeyM:
-  # Load the values of leftInput, rightInput, upInput, and downInput
-  lw $t0, leftInput
-  lw $t1, rightInput
-  lw $t2, upInput
-  lw $t3, downInput
+  # Prolog: Store the value of $ra
+  addi $sp, $sp, -4
+  sw $ra, 0($sp)
 
   # Loop to draw the pixels down and right
   drawM:
-    beq $t3, 30, endM           # Check if at the bottom border (y-coordinate is 30)
-    beq $t1, 30, endM           # Check if at the right border (x-coordinate is 30)
+    # Load 'rightInput' and 'downInput' into $t# registers for evaluation
+    lw $t0, rightInput
+    lw $t1, downInput
     
-    addi $t3, $t3, 1            # Increment $t3 by 1 (move down)
-    addi $t2, $t2, -1           # Decrement $t2 by 1 (update remaining space up)
-      
-    addi $t1, $t1, 1            # Increment $t1 by 1 (move right)
-    addi $t0, $t0, -1           # Decrement $t0 by 1 (update remaining space left)
-      
-    addi $s1, $s1, 260          # Update pointer to move down and right
-    sw $s0, 0($s1)              # Write a pixel at the current location
-    b drawM
+    beq $t0, 30, endM           # Check if at the right border (x-coordinate is 30)
+    beq $t1, 30, endM           # Check if at the bottom border (y-coordinate is 30)
+    
+    jal handleKeyM              # Call handleKeyM to draw the pixel and update the position
+    
+    b drawM                     # Repeat the loop
   endM:
   
-  # Store the updated values back to memory
-  sw $t0, leftInput
-  sw $t1, rightInput
-  sw $t2, upInput
-  sw $t3, downInput
+  # Epilog: Restore $ra
+  lw $ra, 0($sp)
+  addi $sp, $sp, 4
   
   jr $ra
 
